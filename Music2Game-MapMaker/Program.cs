@@ -15,7 +15,7 @@ namespace Music2Game_MapMaker {
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 5; // Lados do quadro do grid (em px)
-        private static string VERSION = "0.1.8";
+        private static string VERSION = "0.2.0";
 
         static void Main(string[] args) {
 
@@ -33,11 +33,17 @@ namespace Music2Game_MapMaker {
 
             // Métdo : Sequência de alturas por compasso
             Console.WriteLine();
-            Console.WriteLine("Criando mapa utilizando o método: Sequência de alturas");
-            HeightsSequence(music, name);
+            Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
+            try {
+                HeightsSequence(music, name, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false);
+            } catch (Exception ex) {
+                Console.Error.WriteLine(ex.Message);
+            }
         }
 
-        public static void HeightsSequence(Score music, string name) {
+        public static void HeightsSequence(Score music, string name, bool mostActive) {
 
             // Sequencia de alturas das "telas"
             List<int> baseHeights = SetHeights(music);
@@ -46,10 +52,62 @@ namespace Music2Game_MapMaker {
             List<int> gridHeights = MeasureToGrid(baseHeights);
 
             // Gera novos abismos (ou plataformas e regiões "abissais")
-            //List<Tuple<int, int>> abyss =;
+            if (mostActive) {
+                Console.WriteLine("Usando isntrumento mais ativo");
+                name += "_ma";
+            } else {
+                Console.WriteLine("Usando isntrumento menos ativo");
+                name += "_la";
+            }
+            Console.Write("   Adicionando novos abismos... ");
+            gridHeights = Abyss(music, gridHeights, mostActive);
+            Console.WriteLine("OK");
 
             // Desanha mapa, como definido pela sequência de alturas
             DrawMap(name + "_HS", gridHeights);
+        }
+
+        public static List<int> Abyss(Score music, List<int> baseHeights, bool mostActive) {
+            List<int> final = baseHeights;
+
+            // Encontra parte (instrumento) menos ativo (que toca menos notas)
+            Part part;
+            if (mostActive) {
+                part = music.MostActive();
+            } else {
+                part = music.LeastActive();
+            }
+
+            if (part == null) {
+                throw (new Exception("Falha em music.LeastActive()"));
+            }
+
+            // Varra cada nota (ou base de acorde) gerando novos abismos
+            int measureCount = 0;
+            int start;
+            int finish;
+            
+            foreach (var measure in part.Measures) {
+                foreach (var note in measure.Elements) {
+                    if (note.Type == MeasureElementType.Note || note.Type == MeasureElementType.ChordBase) {
+                        if (note.Duration > measure.Size / 2) {
+                            start = SCREEN + measureCount * MEASURE + ( int )(note.Position * (( double )MEASURE / measure.Size));
+                            finish = start + ( int )(16 * (( double )note.Duration / (2 * measure.Size)));
+                            for (int xx = start; xx <= finish; xx++) {
+                                if (final[xx] >= 0) {
+                                    final[xx] = 0;
+                                } else {
+                                    final[xx] = baseHeights[xx - MEASURE];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                measureCount++;
+            }
+
+            return final;
         }
 
         public static List<int> MeasureToGrid(List<int> baseHeights) {
