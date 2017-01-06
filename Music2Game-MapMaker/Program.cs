@@ -15,8 +15,15 @@ namespace Music2Game_MapMaker {
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 5; // Lados do quadro do grid (em px)
+        private static string VERSION = "0.1.8";
 
         static void Main(string[] args) {
+
+            // Log (Console) de Características
+            Console.WriteLine("Versão do algoitmo : {0}", VERSION);
+            Console.WriteLine("Tamanho do quadro : {0}px", GRID);
+            Console.WriteLine("Tamanho do compasso : {0} quadros", MEASURE);
+            Console.WriteLine("Tamanho da tela : {0} quadros", SCREEN);
 
             // Representação da partitura
             Score music = ScoreBuilder.FromXML(args[0]);
@@ -24,12 +31,50 @@ namespace Music2Game_MapMaker {
             // Nome do arquivo (sem extensão)
             string name = args[0].Remove(args[0].Length - 4);
 
+            // Métdo : Sequência de alturas por compasso
+            Console.WriteLine();
+            Console.WriteLine("Criando mapa utilizando o método: Sequência de alturas");
+            HeightsSequence(music, name);
+        }
+
+        public static void HeightsSequence(Score music, string name) {
+
             // Sequencia de alturas das "telas"
-            List<int> heights = SetHeights(music);
+            List<int> baseHeights = SetHeights(music);
+
+            // Transforma a sequencia de alturas base (por compasso) em alturas "por quadro"
+            List<int> gridHeights = MeasureToGrid(baseHeights);
+
+            // Gera novos abismos (ou plataformas e regiões "abissais")
+            //List<Tuple<int, int>> abyss =;
 
             // Desanha mapa, como definido pela sequência de alturas
-            DrawMap(name, heights);
-            
+            DrawMap(name + "_HS", gridHeights);
+        }
+
+        public static List<int> MeasureToGrid(List<int> baseHeights) {
+            List<int> gridHeights = new List<int>(baseHeights.Capacity * MEASURE);
+
+            // Adiciona tela extra de início
+            for (int gg = 0; gg < SCREEN; gg++) {
+                gridHeights.Add(BASEHEIGHT);
+            }
+
+            // Calcula altura finais a partir dos "delta" em baseHeights
+            int height;
+            foreach (int h in baseHeights) {
+                height = gridHeights.Last() + h;
+                for (int gg = 0; gg < MEASURE; gg++) {
+                    gridHeights.Add(height);
+                }
+            }
+
+            // Adiciona tela extra de fim
+            for (int gg = 0; gg < SCREEN; gg++) {
+                gridHeights.Add(gridHeights.Last());
+            }
+
+            return gridHeights;
         }
 
         public static List<int> SetHeights(Score music) {
@@ -38,8 +83,13 @@ namespace Music2Game_MapMaker {
             int partCount = music.Parts.Count; // Total de partes (instrumentos) da música
             List<int> heights = new List<int>(measureCount + 4);
 
-            heights.Add(BASEHEIGHT); // Primeira tela 1 de 2
-            heights.Add(BASEHEIGHT); // Priemira tela 2 de 2
+            //int ratio = ( int )Math.Ceiling(( double )SCREEN / MEASURE);
+            //for (int ii = 0; ii < ratio; ii++) {
+            //    heights.Add(BASEHEIGHT);
+            //}
+
+            //heights.Add(BASEHEIGHT); // Primeira tela 1 de 2
+            //heights.Add(BASEHEIGHT); // Priemira tela 2 de 2
 
             // Auxiliares para o loop
             Measure msr;
@@ -104,46 +154,62 @@ namespace Music2Game_MapMaker {
                     }
                     sum += (5 * delta) / msr.Size;
                 }
-                heights.Add(heights.Last() + sum / partCount);
+                heights.Add(sum / partCount);
                 //Console.WriteLine(heights.Last());
             }
 
-            heights.Add(heights.Last()); // Área final 1 de 2
-            heights.Add(heights.Last()); // Área final 2 de 2
+            //for (int ii = 0; ii < ratio; ii++) {
+            //    heights.Add(heights.Last());
+            //}
+
+            //Console.WriteLine("Compassos adicionados ao início e fim : {0}", ratio);
+
+            //heights.Add(heights.Last()); // Área final 1 de 2
+            //heights.Add(heights.Last()); // Área final 2 de 2
 
             return heights;
         }
 
-        public static void DrawMap(string name, List<int> heights) {
+        public static void DrawMap(string name, List<int> heights, bool drawGrid = true, bool drawMeasureBounds = true, bool drawScreenBounds = true) {
             
             // Auxiliares para a imagem
-            int width = heights.Count * MEASURE * GRID; // Largura da imagem gerada
+            int width = heights.Count * GRID; // Largura da imagem gerada
             int height = (heights.Max() + 2 * SCREEN) * GRID;
             int posX = 0;
             using (Bitmap map = new Bitmap(width, height)) {
                 using (Graphics g = Graphics.FromImage(map)) {
-                    DrawBackGround(g, height, heights.Count - 4);
+                    DrawBackGround(g, height, heights.Count - 2 * SCREEN);
                     foreach (var h in heights) {
-                        DrawPlatform(g, posX, h, height);
-                        posX += MEASURE;
+                        DrawColumn(g, posX, h, height);
+                        posX++;
                     }
-                    DrawGridOverlay(g, width, height);
-                    DrawMeasureBounds(g, width, height);
-                    DrawScreenBounds(g, width, height);
-                    map.Save(name + "[div][0.1.6].png", ImageFormat.Png);
+                    if (drawGrid) {
+                        DrawGridOverlay(g, width, height);
+                    }
+                    if (drawMeasureBounds) {
+                        DrawMeasureBounds(g, width, height);
+                    }
+                    if (drawScreenBounds) {
+                        DrawScreenBounds(g, width, height);
+                    }
+                    map.Save(name + "[" + VERSION + "].png", ImageFormat.Png);
                 }
             }
         }
 
         public static void DrawBackGround(Graphics graphics, int height, int musicWidth) {
             graphics.FillRectangle(Brushes.MistyRose, 0, 0, SCREEN * GRID, height); // Denota área inicial (padrão)
-            graphics.FillRectangle(Brushes.Lavender, SCREEN * GRID, 0, musicWidth * MEASURE * GRID, height); // Denota área gerada pela música
-            graphics.FillRectangle(Brushes.MistyRose, musicWidth * MEASURE * GRID + SCREEN * GRID, 0, SCREEN * GRID, height); // Denota área final (padrão)
+            graphics.FillRectangle(Brushes.Lavender, SCREEN * GRID, 0, musicWidth * GRID, height); // Denota área gerada pela música
+            graphics.FillRectangle(Brushes.MistyRose, (musicWidth + SCREEN) * GRID, 0, SCREEN * GRID, height); // Denota área final (padrão)
         }
 
-        public static void DrawPlatform(Graphics graphics, int X, int platformHeight, int mapHeight) {
-            graphics.FillRectangle(Brushes.ForestGreen, X * GRID, mapHeight - (platformHeight * GRID), MEASURE * GRID, platformHeight * GRID);
+        public static void DrawColumn(Graphics graphics, int X, int columnHeight, int mapHeight) {
+            graphics.FillRectangle(Brushes.ForestGreen, X * GRID, mapHeight - (columnHeight * GRID), GRID, columnHeight * GRID);
         }
+
+        //public static void DrawPlatform(Graphics graphics, int X, int platformHeight, int mapHeight) {
+        //    graphics.FillRectangle(Brushes.ForestGreen, X * GRID, mapHeight - (platformHeight * GRID), MEASURE * GRID, platformHeight * GRID);
+        //}
 
         public static void DrawScreenBounds(Graphics graphics, int mapWidth, int mapHeight) {
             int X = 0;
