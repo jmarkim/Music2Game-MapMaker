@@ -14,9 +14,9 @@ namespace Music2Game_MapMaker {
         private static int BASEHEIGHT = 10; // Altura da primeira tela;
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
-        private static int GRID = 5; // Lados do quadro do grid (em px)
-        private static int MAXID = 3; // Quantidade máxima de desafios em cada categoria
-        private static string VERSION = "0.2.0";
+        private static int GRID = 10; // Lados do quadro do grid (em px)
+        private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
+        private static string VERSION = "0.3.1";
 
         static void Main(string[] args) {
 
@@ -50,7 +50,13 @@ namespace Music2Game_MapMaker {
             List<int> baseHeights = SetHeights(music);
 
             // Lista de inimigos
+            Console.Write("Adicionando desafios... ");
             List<Tuple<int, int>> enemies = SetEnemies(music);
+            Console.WriteLine("OK");
+
+            //foreach(var chl in enemies) {
+            //    Console.WriteLine("{0} >> {1}", chl.Item1, chl.Item2);
+            //}
 
             // Transforma a sequencia de alturas base (por compasso) em alturas "por quadro"
             List<int> gridHeights = MeasureToGrid(baseHeights);
@@ -68,7 +74,7 @@ namespace Music2Game_MapMaker {
             Console.WriteLine("OK");
 
             // Desanha mapa, como definido pela sequência de alturas
-            DrawMap(name + "_HS", gridHeights);
+            DrawMap(name + "_HS", gridHeights, enemies);
         }
 
         public static List<Tuple<int, int>> SetEnemies(Score music) {
@@ -80,7 +86,6 @@ namespace Music2Game_MapMaker {
             }
 
             int measureCount = 0;
-            Tuple<int, int> enm;
             int posX;
             int kind;
 
@@ -266,7 +271,7 @@ namespace Music2Game_MapMaker {
             return heights;
         }
 
-        public static void DrawMap(string name, List<int> heights, bool drawGrid = true, bool drawMeasureBounds = true, bool drawScreenBounds = true) {
+        public static void DrawMap(string name, List<int> heights, List<Tuple<int, int>> challenges, bool drawGrid = true, bool drawMeasureBounds = true, bool drawScreenBounds = true) {
             
             // Auxiliares para a imagem
             int width = heights.Count * GRID; // Largura da imagem gerada
@@ -278,6 +283,9 @@ namespace Music2Game_MapMaker {
                     foreach (var h in heights) {
                         DrawColumn(g, posX, h, height);
                         posX++;
+                    }
+                    foreach (var chllng in challenges) {
+                        DrawChallenge(g, chllng.Item1, chllng.Item2, heights[chllng.Item1], height);
                     }
                     if (drawGrid) {
                         DrawGridOverlay(g, width, height);
@@ -291,6 +299,45 @@ namespace Music2Game_MapMaker {
                     map.Save(name + "[" + VERSION + "].png", ImageFormat.Png);
                 }
             }
+        }
+
+        public static void DrawChallenge(Graphics graphics, int X, int kind, int platformHeight, int mapHeight) {
+            if (platformHeight <= 0) {
+                return;
+            }
+
+            Brush colorCode;
+            switch (kind / 10) {
+                case 1:
+                    colorCode = Brushes.Orange;
+                    break;
+
+                case 2:
+                    colorCode = Brushes.PaleVioletRed;
+                    break;
+
+                case 3:
+                    colorCode = Brushes.LightYellow;
+                    break;
+
+                case 4:
+                    colorCode = Brushes.DarkRed;
+                    break;
+
+                case 5:
+                    colorCode = Brushes.DarkSlateGray;
+                    break;
+
+                case 6:
+                    colorCode = Brushes.LightSlateGray;
+                    break;
+
+                default:
+                    colorCode = Brushes.Lavender;
+                    break;
+            }
+            graphics.FillRectangle(colorCode, X * GRID, mapHeight - (platformHeight + 1) * GRID, GRID, GRID);
+            graphics.DrawLine(new Pen(Brushes.Black, 1), X * GRID, mapHeight - (platformHeight + 1) * GRID, X * GRID + GRID, mapHeight - (platformHeight + 1) * GRID + GRID);
         }
 
         public static void DrawBackGround(Graphics graphics, int height, int musicWidth) {
