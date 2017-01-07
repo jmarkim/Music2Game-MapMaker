@@ -15,6 +15,7 @@ namespace Music2Game_MapMaker {
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 5; // Lados do quadro do grid (em px)
+        private static int MAXID = 3; // Quantidade máxima de desafios em cada categoria
         private static string VERSION = "0.2.0";
 
         static void Main(string[] args) {
@@ -48,6 +49,9 @@ namespace Music2Game_MapMaker {
             // Sequencia de alturas das "telas"
             List<int> baseHeights = SetHeights(music);
 
+            // Lista de inimigos
+            List<Tuple<int, int>> enemies = SetEnemies(music);
+
             // Transforma a sequencia de alturas base (por compasso) em alturas "por quadro"
             List<int> gridHeights = MeasureToGrid(baseHeights);
 
@@ -67,6 +71,40 @@ namespace Music2Game_MapMaker {
             DrawMap(name + "_HS", gridHeights);
         }
 
+        public static List<Tuple<int, int>> SetEnemies(Score music) {
+            List<Tuple<int, int>> enemies = new List<Tuple<int, int>>();
+            Part part = music.MostActive();
+
+            if (part == null) {
+                throw new Exception("Falha em MusicScore.Score.MostActive()");
+            }
+
+            int measureCount = 0;
+            Tuple<int, int> enm;
+            int posX;
+            int kind;
+
+            foreach (var measure in part.Measures) {
+                foreach (var note in measure.Elements) {
+                    if (note.Type == MeasureElementType.Chord || note.Type == MeasureElementType.Rest) {
+                        continue;
+                    }
+
+                    if (Note.RoleToInt(note.Note.Role) <= 0) {
+                        continue;
+                    }
+
+                    posX = SCREEN + measureCount * MEASURE + ( int )(note.Position * (( double )MEASURE / measure.Size));
+                    kind = 10 * Note.RoleToInt(note.Note.Role) + Math.Min(measure.Size / note.Duration, MAXID);
+                    enemies.Add(new Tuple<int, int>(posX, kind));
+                }
+
+                measureCount++;
+            }
+
+            return enemies;
+        }
+
         public static List<int> Abyss(Score music, List<int> baseHeights, bool mostActive) {
             List<int> final = baseHeights;
 
@@ -79,7 +117,7 @@ namespace Music2Game_MapMaker {
             }
 
             if (part == null) {
-                throw (new Exception("Falha em music.LeastActive()"));
+                throw (new Exception("Falha em MusicScore.Score.LeastActive() ou MusicScore.Score.MostActive()"));
             }
 
             // Varra cada nota (ou base de acorde) gerando novos abismos
