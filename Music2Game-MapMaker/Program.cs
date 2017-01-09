@@ -17,8 +17,7 @@ namespace Music2Game_MapMaker {
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
         private static int DELTA_THRESHOLD = 40;
-        private static double DELTA_WEIGHT = 0.6; // Influência da diferença no calculo dos deltas
-        private static string VERSION = "0.3.4";
+        private static string VERSION = "0.3.6";
 
         static void Main(string[] args) {
 
@@ -236,41 +235,41 @@ namespace Music2Game_MapMaker {
                         switch (elmnt.Note.Role) {
                             case Scale.Tonic:
                                 if (delta < 0) {
-                                    delta += elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
+                                    delta += (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 } else if (delta > 0) {
-                                    delta -= elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
+                                    delta -= (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 }
                                 break;
 
                             case Scale.Supertonic:
                                 if (delta >= 0) {
-                                    delta += elmnt.Duration;
+                                    delta += (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 }
                                 break;
 
                             case Scale.Mediant:
                                 if (delta < 0) {
-                                    delta += elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
+                                    delta += (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 }
                                 break;
 
                             case Scale.Subdominant:
-                                delta -= elmnt.Duration;
+                                delta -= (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 break;
 
                             case Scale.Dominant:
-                                delta += elmnt.Duration;
+                                delta += (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 break;
 
                             case Scale.Submediant:
                                 if (delta > 0) {
-                                    delta -= elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
+                                    delta -= (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 }
                                 break;
 
                             case Scale.Subtonic:
                                 if (delta <= 0) {
-                                    delta -= elmnt.Duration;
+                                    delta -= (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
                                 }
                                 break;
 
