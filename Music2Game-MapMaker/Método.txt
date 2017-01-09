@@ -1,0 +1,36 @@
+Da Wikipedia a funcao das notas na Escala sao:
+   [T]   Tonica : Referencia hierarquica e resolucao do conflito. "Ponto final"
+   [pT] Super-tonica : Gravita em torno da Dominante
+   [M]   Mediante : Meio termo entre Tonica e Dominante
+   [bD]  Sub-dominante : Simetrico da Dominante (A Tonica e a Dominante em relacao a Sub-dominante)
+   [D]   Domiante : Gera instabilidade para ser resolvida pela Tonica. "Virgula"
+   [bM]  Sub-mediante : Meio termo entre Sub-dominante e Tonica
+   [bT]  Sub-tonica : Nao encontrei nada significativo sobre ela. Normalmente e modificada para "dirigir" o ouvido de volta a Tonica
+
+Essas funcoes guiam o restante do metodo.
+Geografia base:
+   Os instrumentos sao analisados e cada compasso gera um ƒ¢h baseado nas notas do compasso. As plataformas comecam com altura H = 10 e a altura da regiao i e dada por Hi = H(i-1) + ƒ¢H(i), sendo ƒ¢H(i) o somatorio de todo ƒ¢h(i).
+
+   T  -> ƒ¢h += X, se ƒ¢h < 0 .OU. ƒ¢h -= X, se ƒ¢h > 0
+   pT -> ƒ¢h += X, se ƒ¢h >= 0
+   M  -> ƒ¢h += X, se ƒ¢h < 0
+   bD -> ƒ¢h -= X
+   D  -> ƒ¢h += X
+   bM -> ƒ¢h -= X, se ƒ¢h > 0
+   bT -> ƒ¢h -= X, se ƒ¢h <= 0
+      X = Duracao da nota
+   Pausas sao ignoradas
+
+Abismos extras
+   O instrumento menos ativo e analisado nota a nota, um abismo e adicionado naquela posicao se a nota tem duracao maior que a metade do compasso onde se situa, o abismo gerado tem tamanho igual a metade da duracao da nota
+
+Desafios
+   O instrumento mais ativo e analisado nota a nota. Um desafio da categoria adequada e adicionado conforme a duracao da nota, notas curtas geram desafios mais faceis (ja que podem gerar desafios mais frequentes)
+
+   T  -> nada (bloco Transparente)
+   pT -> Obstaculos ativos (bloco Laranja) (Piranha plant)
+   M  -> Inimigos passivos (bloco Vermelho Claro / Violeta Avermelhado) (Goomba)
+   bD -> Obstaculos passivos (bloco Amarelo Claro (quase branco)) (Espinhos)
+   D  -> Inimigos ativos (bloco Vermelho Escuro) (Hammer bros.)
+   bM -> Obstaculos inertes (bloco Cinza Escuro) (Canos)
+   bT -> nada (bloco Cinza Claro)

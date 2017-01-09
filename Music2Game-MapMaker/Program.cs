@@ -11,12 +11,12 @@ namespace Music2Game_MapMaker {
     class Program {
 
         // Constantes
-        private static int BASEHEIGHT = 10; // Altura da primeira tela;
+        private static int BASEHEIGHT = 500; // Altura da primeira tela;
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
-        private static string VERSION = "0.3.1";
+        private static string VERSION = "0.3.2";
 
         static void Main(string[] args) {
 
