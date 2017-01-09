@@ -11,12 +11,13 @@ namespace Music2Game_MapMaker {
     class Program {
 
         // Constantes
-        private static int BASEHEIGHT = 500; // Altura da primeira tela;
+        private static int BASEHEIGHT = 50; // Altura da primeira tela;
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
-        private static string VERSION = "0.3.2";
+        private static double DELTAWEIGHT = 1.0; // Influência da diferença no calculo dos deltas
+        private static string VERSION = "0.3.3";
 
         static void Main(string[] args) {
 
@@ -36,18 +37,28 @@ namespace Music2Game_MapMaker {
             Console.WriteLine();
             Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
             try {
-                HeightsSequence(music, name, true);
+                HeightsSequence(music, name, true, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, false);
+                HeightsSequence(music, name, true, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.Message);
             }
         }
 
-        public static void HeightsSequence(Score music, string name, bool mostActive) {
+        public static void HeightsSequence(Score music, string name, bool mostActive, bool globalReference) {
+
+            if (globalReference) {
+                name += "_GR";
+            } else {
+                name += "_LR";
+            }
 
             // Sequencia de alturas das "telas"
-            List<int> baseHeights = SetHeights(music);
+            List<int> baseHeights = SetHeights(music, globalReference);
 
             // Lista de inimigos
             Console.Write("Adicionando desafios... ");
@@ -178,11 +189,16 @@ namespace Music2Game_MapMaker {
             return gridHeights;
         }
 
-        public static List<int> SetHeights(Score music) {
+        public static List<int> SetHeights(Score music, bool globalReference) {
+            if (globalReference) {
+                Console.WriteLine("Usando referência global");
+            } else {
+                Console.WriteLine("Usando referência local");
+            }
 
             int measureCount = music.Parts[0].Measures.Count; // Total de compassos da música
             int partCount = music.Parts.Count; // Total de partes (instrumentos) da música
-            List<int> heights = new List<int>(measureCount + 4);
+            List<int> heights = new List<int>(measureCount);
 
             //int ratio = ( int )Math.Ceiling(( double )SCREEN / MEASURE);
             //for (int ii = 0; ii < ratio; ii++) {
@@ -201,7 +217,15 @@ namespace Music2Game_MapMaker {
                 sum = 0;
 
                 for (int pp = 0; pp < partCount; pp++) {
-                    delta = 0;
+                    if (globalReference) {
+                        if (heights.Count() != 0) {
+                            delta = heights.Last();
+                        } else {
+                            delta = 0;
+                        }
+                    } else { 
+                        delta = 0;
+                    }
                     msr = music.Parts[pp].Measures[mm];
 
                     foreach (var elmnt in msr.Elements) {
