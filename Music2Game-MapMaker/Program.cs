@@ -17,7 +17,7 @@ namespace Music2Game_MapMaker {
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
         private static int DELTA_THRESHOLD = 40;
-        private static string VERSION = "0.3.6";
+        private static string VERSION = "0.3.7";
 
         static void Main(string[] args) {
 
@@ -84,8 +84,15 @@ namespace Music2Game_MapMaker {
             gridHeights = Abyss(music, gridHeights, mostActive);
             Console.WriteLine("OK");
 
+            //Console.WriteLine("\n\ngridHeights({0}) : ");
+            //foreach (var num in gridHeights) {
+            //    Console.WriteLine("   {0}", num);
+            //}
+
             // Desanha mapa, como definido pela sequência de alturas
+            Console.Write("   Criando Imagem... ");
             DrawMap(name + "_HS", gridHeights, enemies);
+            Console.WriteLine("OK");
         }
 
         public static List<Tuple<int, int>> SetEnemies(Score music) {
@@ -296,7 +303,6 @@ namespace Music2Game_MapMaker {
         }
 
         public static void DrawMap(string name, List<int> heights, List<Tuple<int, int>> challenges, bool drawGrid = true, bool drawMeasureBounds = true, bool drawScreenBounds = true) {
-            
             // Auxiliares para a imagem
             int width = heights.Count * GRID; // Largura da imagem gerada
             int height = (heights.Max() + 2 * SCREEN) * GRID;
