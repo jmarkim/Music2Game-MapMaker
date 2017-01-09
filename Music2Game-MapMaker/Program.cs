@@ -11,13 +11,14 @@ namespace Music2Game_MapMaker {
     class Program {
 
         // Constantes
-        private static int BASEHEIGHT = 50; // Altura da primeira tela;
+        private static int BASE_HEIGHT = 50; // Altura da primeira tela;
         private static int SCREEN = 32; // Tamanho em quadros da tela
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
-        private static double DELTAWEIGHT = 1.0; // Influência da diferença no calculo dos deltas
-        private static string VERSION = "0.3.3";
+        private static int DELTA_THRESHOLD = 40;
+        private static double DELTA_WEIGHT = 0.6; // Influência da diferença no calculo dos deltas
+        private static string VERSION = "0.3.4";
 
         static void Main(string[] args) {
 
@@ -169,7 +170,7 @@ namespace Music2Game_MapMaker {
 
             // Adiciona tela extra de início
             for (int gg = 0; gg < SCREEN; gg++) {
-                gridHeights.Add(BASEHEIGHT);
+                gridHeights.Add(BASE_HEIGHT);
             }
 
             // Calcula altura finais a partir dos "delta" em baseHeights
@@ -235,9 +236,9 @@ namespace Music2Game_MapMaker {
                         switch (elmnt.Note.Role) {
                             case Scale.Tonic:
                                 if (delta < 0) {
-                                    delta += elmnt.Duration;
+                                    delta += elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
                                 } else if (delta > 0) {
-                                    delta -= elmnt.Duration;
+                                    delta -= elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
                                 }
                                 break;
 
@@ -249,7 +250,7 @@ namespace Music2Game_MapMaker {
 
                             case Scale.Mediant:
                                 if (delta < 0) {
-                                    delta += elmnt.Duration;
+                                    delta += elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
                                 }
                                 break;
 
@@ -263,7 +264,7 @@ namespace Music2Game_MapMaker {
 
                             case Scale.Submediant:
                                 if (delta > 0) {
-                                    delta -= elmnt.Duration;
+                                    delta -= elmnt.Duration + ( int )(DELTA_WEIGHT * elmnt.Duration * Math.Abs(delta) / DELTA_THRESHOLD);
                                 }
                                 break;
 
