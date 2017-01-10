@@ -17,7 +17,8 @@ namespace Music2Game_MapMaker {
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
         private static int DELTA_THRESHOLD = 40;
-        private static string VERSION = "0.3.7";
+        private static int MEASURE_FRACTION = 3; // Tamanho mínima de nota geradora de abismos (fração do tamanho do compasso)
+        private static string VERSION = "0.3.9";
 
         static void Main(string[] args) {
 
@@ -37,19 +38,27 @@ namespace Music2Game_MapMaker {
             Console.WriteLine();
             Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
             try {
-                HeightsSequence(music, name, true, true);
+                HeightsSequence(music, name, true, true, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, true, false);
+                HeightsSequence(music, name, true, true, false);
                 Console.WriteLine();
-                HeightsSequence(music, name, false, true);
+                HeightsSequence(music, name, true, false, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, false, false);
+                HeightsSequence(music, name, true, false, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false, false);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.Message);
             }
         }
 
-        public static void HeightsSequence(Score music, string name, bool mostActive, bool globalReference) {
+        public static void HeightsSequence(Score music, string name, bool mostActive, bool globalReference, bool restCount) {
 
             if (globalReference) {
                 name += "_GR";
@@ -73,15 +82,22 @@ namespace Music2Game_MapMaker {
             List<int> gridHeights = MeasureToGrid(baseHeights);
 
             // Gera novos abismos (ou plataformas e regiões "abissais")
+            if (restCount) {
+                Console.WriteLine("   Usando pausas");
+                name += "_RC";
+            } else {
+                Console.WriteLine("   Usando notas 'grandes'");
+                name += "_BN";
+            }
             if (mostActive) {
-                Console.WriteLine("Usando isntrumento mais ativo");
+                Console.WriteLine("   Usando isntrumento mais ativo");
                 name += "_ma";
             } else {
-                Console.WriteLine("Usando isntrumento menos ativo");
+                Console.WriteLine("   Usando isntrumento menos ativo");
                 name += "_la";
             }
             Console.Write("   Adicionando novos abismos... ");
-            gridHeights = Abyss(music, gridHeights, mostActive);
+            gridHeights = Abyss(music, gridHeights, mostActive, restCount);
             Console.WriteLine("OK");
 
             //Console.WriteLine("\n\ngridHeights({0}) : ");
@@ -128,15 +144,15 @@ namespace Music2Game_MapMaker {
             return enemies;
         }
 
-        public static List<int> Abyss(Score music, List<int> baseHeights, bool mostActive) {
+        public static List<int> Abyss(Score music, List<int> baseHeights, bool mostActive, bool restCount) {
             List<int> final = baseHeights;
 
             // Encontra parte (instrumento) menos ativo (que toca menos notas)
             Part part;
             if (mostActive) {
-                part = music.MostActive();
+                part = music.MostActive(restCount);
             } else {
-                part = music.LeastActive();
+                part = music.LeastActive(restCount);
             }
 
             if (part == null) {
@@ -150,15 +166,29 @@ namespace Music2Game_MapMaker {
             
             foreach (var measure in part.Measures) {
                 foreach (var note in measure.Elements) {
-                    if (note.Type == MeasureElementType.Note || note.Type == MeasureElementType.ChordBase) {
-                        if (note.Duration > measure.Size / 2) {
+                    if (restCount) {
+                        if (note.Type == MeasureElementType.Rest) {
                             start = SCREEN + measureCount * MEASURE + ( int )(note.Position * (( double )MEASURE / measure.Size));
                             finish = start + ( int )(16 * (( double )note.Duration / (2 * measure.Size)));
                             for (int xx = start; xx <= finish; xx++) {
                                 if (final[xx] >= 0) {
                                     final[xx] = 0;
                                 } else {
-                                    final[xx] = baseHeights[xx - MEASURE];
+                                    final[xx] = 1;
+                                }
+                            }
+                        }
+                    } else {
+                        if (note.Type == MeasureElementType.Note || note.Type == MeasureElementType.ChordBase) {
+                            if (note.Duration > measure.Size / MEASURE_FRACTION) {
+                                start = SCREEN + measureCount * MEASURE + ( int )(note.Position * (( double )MEASURE / measure.Size));
+                                finish = start + ( int )(16 * (( double )note.Duration / (2 * measure.Size)));
+                                for (int xx = start; xx <= finish; xx++) {
+                                    if (final[xx] >= 0) {
+                                        final[xx] = 0;
+                                    } else {
+                                        final[xx] = 1;
+                                    }
                                 }
                             }
                         }
