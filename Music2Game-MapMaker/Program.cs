@@ -16,9 +16,9 @@ namespace Music2Game_MapMaker {
         private static int MEASURE = 16; // Tamanho em quadros de um compasso
         private static int GRID = 10; // Lados do quadro do grid (em px)
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
-        private static int DELTA_THRESHOLD = 40;
+        private static int DELTA_THRESHOLD = int.MaxValue;
         private static int MEASURE_FRACTION = 3; // Tamanho mínima de nota geradora de abismos (fração do tamanho do compasso)
-        private static string VERSION = "0.3.9";
+        private static string VERSION = "0.4.2";
 
         static void Main(string[] args) {
 
@@ -38,27 +38,49 @@ namespace Music2Game_MapMaker {
             Console.WriteLine();
             Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
             try {
-                HeightsSequence(music, name, true, true, true);
+                HeightsSequence(music, name, true, true, true, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, true, true, false);
+                HeightsSequence(music, name, true, true, true, false);
                 Console.WriteLine();
-                HeightsSequence(music, name, true, false, true);
+                HeightsSequence(music, name, true, true, false, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, true, false, false);
+                HeightsSequence(music, name, true, true, false, false);
                 Console.WriteLine();
-                HeightsSequence(music, name, false, true, true);
+                HeightsSequence(music, name, true, false, true, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, false, true, false);
+                HeightsSequence(music, name, true, false, true, false);
                 Console.WriteLine();
-                HeightsSequence(music, name, false, false, true);
+                HeightsSequence(music, name, true, false, false, true);
                 Console.WriteLine();
-                HeightsSequence(music, name, false, false, false);
+                HeightsSequence(music, name, true, false, false, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true, true, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true, true, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true, false, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, true, false, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false, true, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false, true, false);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false, false, true);
+                Console.WriteLine();
+                HeightsSequence(music, name, false, false, false, false);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.Message);
             }
         }
 
-        public static void HeightsSequence(Score music, string name, bool mostActive, bool globalReference, bool restCount) {
+        public static void HeightsSequence(Score music, string name, bool staticRoles, bool globalReference, bool restCount, bool mostActive) {
+
+            if (staticRoles) {
+                name += "_SR";
+            } else {
+                name += "_DR";
+            }
 
             if (globalReference) {
                 name += "_GR";
@@ -67,7 +89,7 @@ namespace Music2Game_MapMaker {
             }
 
             // Sequencia de alturas das "telas"
-            List<int> baseHeights = SetHeights(music, globalReference);
+            List<int> baseHeights = SetHeights(music, staticRoles, globalReference);
 
             // Lista de inimigos
             Console.Write("Adicionando desafios... ");
@@ -226,7 +248,109 @@ namespace Music2Game_MapMaker {
             return gridHeights;
         }
 
-        public static List<int> SetHeights(Score music, bool globalReference) {
+        public static Scale IntToRole(int intRole) {
+            switch (intRole) {
+                case 0:
+                    return Scale.Tonic;
+
+                case 1:
+                    return Scale.Supertonic;
+
+                case 2:
+                    return Scale.Mediant;
+
+                case 3:
+                    return Scale.Subdominant;
+
+                case 4:
+                    return Scale.Dominant;
+
+                case 5:
+                    return Scale.Submediant;
+
+                case 6:
+                    return Scale.Subtonic;
+
+                default:
+                    return Scale.NA;
+            }
+        }
+
+        public static List<int> SetHeights(Score music, bool staticRoles, bool globalReference) {
+            Scale Reference = Scale.Tonic;
+            Scale Elevation = Scale.Dominant;
+            Scale Depression = Scale.Subdominant;
+            Scale ConditionalElevation = Scale.Supertonic;
+            Scale ConditionalDepression = Scale.Subtonic;
+            Scale NegativeCorrection = Scale.Mediant;
+            Scale PositiveCorrection = Scale.Submediant;
+
+            if (staticRoles) {
+                Console.WriteLine("Funções estáticas :");
+            } else {
+                Console.WriteLine("Funções dinâmicas :");
+                List<int> count = music.RoleCounts();
+                int max;
+                int maxId;
+
+                Console.Write("      Contagem :");
+                foreach (var num in count) {
+                    Console.Write(" {0}", num);
+                }
+
+                // Referência >> Δh += X, se Δh < 0 .OU. Δh -= X, se Δh > 0
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                Reference = IntToRole(maxId); // Define nota da escala responsável pela função
+
+                // Elevação >> Δh += X
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                Elevation = IntToRole(maxId); // Define nota da escala responsável pela função
+
+                // Depressão >> Δh -= X
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                Depression = IntToRole(maxId); // Define nota da escala responsável pela função
+
+                // Elevação Condicional >> Δh += X, se Δh >= 0
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                ConditionalElevation = IntToRole(maxId); // Define nota da escala responsável pela função
+
+                // Depressão Condicional >> Δh -= X, Δh <= 0
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                ConditionalDepression = IntToRole(maxId); // Define nota da escala responsável pela função
+
+                // Correção Negativa >> Δh += X, se Δh < 0
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                NegativeCorrection = IntToRole(maxId); // Define nota da escala responsável pela função
+
+                // Correção Positiva >> Δh -= X, se Δh > 0
+                max = count.Max(); // Busca papel de maior ocorrência
+                maxId = count.FindIndex(num => num == max); // Recupera o índice do papel
+                count[maxId] = -1; // Remove da próxima iteração
+                PositiveCorrection = IntToRole(maxId); // Define nota da escala responsável pela função
+
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("   Referência .......... : {0}", Reference);
+            Console.WriteLine("   Elevação ............ : {0}", Elevation);
+            Console.WriteLine("   Depressão ........... : {0}", Depression);
+            Console.WriteLine("   Elevação Condicional  : {0}", ConditionalElevation);
+            Console.WriteLine("   Depressão Condicional : {0}", ConditionalDepression);
+            Console.WriteLine("   Correção Negativa ... : {0}", NegativeCorrection);
+            Console.WriteLine("   Correção Positiva ... : {0}", PositiveCorrection);
+
             if (globalReference) {
                 Console.WriteLine("Usando referência global");
             } else {
@@ -269,49 +393,38 @@ namespace Music2Game_MapMaker {
                         if (elmnt.Type == MeasureElementType.Rest) {
                             continue;
                         }
-                        switch (elmnt.Note.Role) {
-                            case Scale.Tonic:
-                                if (delta < 0) {
-                                    delta += (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                } else if (delta > 0) {
-                                    delta -= (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                }
-                                break;
+                        if (elmnt.Note.Role == Reference) {
+                            if (delta < 0) {
+                                delta += (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
+                            } else if (delta > 0) {
+                                delta -= (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
+                            }
 
-                            case Scale.Supertonic:
-                                if (delta >= 0) {
-                                    delta += (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                }
-                                break;
+                        } else if (elmnt.Note.Role == Elevation) {
+                            delta += (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
 
-                            case Scale.Mediant:
-                                if (delta < 0) {
-                                    delta += (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                }
-                                break;
+                        } else if (elmnt.Note.Role == Depression) {
+                            delta -= (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
 
-                            case Scale.Subdominant:
-                                delta -= (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                break;
-
-                            case Scale.Dominant:
+                        } else if (elmnt.Note.Role == ConditionalElevation) { 
+                            if (delta >= 0) {
                                 delta += (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                break;
+                            }
 
-                            case Scale.Submediant:
-                                if (delta > 0) {
-                                    delta -= (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                }
-                                break;
+                        } else if (elmnt.Note.Role == ConditionalDepression) {
+                            if (delta <= 0) {
+                                delta -= (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
+                            }
 
-                            case Scale.Subtonic:
-                                if (delta <= 0) {
-                                    delta -= (elmnt.Duration / (Math.Abs(delta) / DELTA_THRESHOLD + 1));
-                                }
-                                break;
+                        } else if (elmnt.Note.Role == NegativeCorrection) { 
+                            if (delta < 0) {
+                                delta += (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
+                            }
 
-                            default:
-                                break;
+                        } else if (elmnt.Note.Role == PositiveCorrection) { 
+                            if (delta > 0) {
+                                delta -= (elmnt.Duration * (Math.Abs(delta) / DELTA_THRESHOLD + 1));
+                            }
                         }
                     }
                     sum += (5 * delta) / msr.Size;
