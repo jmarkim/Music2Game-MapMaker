@@ -37,7 +37,7 @@ namespace LevelClasses {
                             g.FillRectangle(Level.ABYSS_BACKGROUND, grid);
                             g.DrawLine(Level.ABYSS_LINE, grid.Left, grid.Bottom, grid.Right, grid.Top);
                         }
-                        grid.Y = img.Height - abyss.PosY;
+                        grid.Y = img.Height - abyss.PosY * Level.GRID_SIZE;
                         g.FillRectangle(Level.ABYSS_BACKGROUND, grid);
                     }
                 }
