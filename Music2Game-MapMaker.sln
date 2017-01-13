@@ -5,6 +5,10 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Music2Game-MapMaker", "Music2Game-MapMaker\Music2Game-MapMaker.csproj", "{9C2FA7E9-9C03-4AD3-B9D9-F6C76FB39AD9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LevelClasses", "LevelClasses\LevelClasses.csproj", "{D91A092B-5F25-46B9-8B7C-BD55D7745A8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicScore", "..\MusicScore\MusicScore\MusicScore.csproj", "{A03E1770-48D3-4630-87BB-09B599B60D54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{9C2FA7E9-9C03-4AD3-B9D9-F6C76FB39AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C2FA7E9-9C03-4AD3-B9D9-F6C76FB39AD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C2FA7E9-9C03-4AD3-B9D9-F6C76FB39AD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D91A092B-5F25-46B9-8B7C-BD55D7745A8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D91A092B-5F25-46B9-8B7C-BD55D7745A8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D91A092B-5F25-46B9-8B7C-BD55D7745A8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D91A092B-5F25-46B9-8B7C-BD55D7745A8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A03E1770-48D3-4630-87BB-09B599B60D54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A03E1770-48D3-4630-87BB-09B599B60D54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A03E1770-48D3-4630-87BB-09B599B60D54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A03E1770-48D3-4630-87BB-09B599B60D54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

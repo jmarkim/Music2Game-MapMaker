@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MusicScore;
 using System.Drawing;
 using System.Drawing.Imaging;
+using LevelClasses;
 
 namespace Music2Game_MapMaker {
     class Program {
@@ -18,7 +19,8 @@ namespace Music2Game_MapMaker {
         private static int MAXID = 9; // Quantidade máxima de desafios em cada categoria
         private static int DELTA_THRESHOLD = int.MaxValue;
         private static int MEASURE_FRACTION = 3; // Tamanho mínima de nota geradora de abismos (fração do tamanho do compasso)
-        private static string VERSION = "0.4.2";
+        private static int MINIMUN_HEIGHT = 3; // Alutra mínima paa plataformas flutuantes
+        private static string VERSION = "0.5.0";
 
         static void Main(string[] args) {
 
@@ -34,41 +36,48 @@ namespace Music2Game_MapMaker {
             // Nome do arquivo (sem extensão)
             string name = args[0].Remove(args[0].Length - 4);
 
+            // Objeto Level
+            LevelClasses.Level map = new LevelClasses.Level(music);
+            map.SaveImage(name + "_final[" + VERSION + "]");
+
             // Métdo : Sequência de alturas por compasso
             Console.WriteLine();
-            Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
+            //Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
             try {
-                HeightsSequence(music, name, true, true, true, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, true, true, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, true, false, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, true, false, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, false, true, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, false, true, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, false, false, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, true, false, false, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, true, true, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, true, true, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, true, false, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, true, false, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, false, true, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, false, true, false);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, false, false, true);
-                Console.WriteLine();
-                HeightsSequence(music, name, false, false, false, false);
+                //Refrência Estática
+                //HeightsSequence(music, name, true, true, true, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, true, true, false);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, true, false, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, true, false, false);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, false, true, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, false, true, false);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, false, false, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, true, false, false, false);
+                //Console.WriteLine();
+
+                //Referência Dinâmica
+                //HeightsSequence(music, name, false, true, true, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, true, true, false);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, true, false, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, true, false, false);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, false, true, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, false, true, false);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, false, false, true);
+                //Console.WriteLine();
+                //HeightsSequence(music, name, false, false, false, false);
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex.Message);
             }
@@ -91,7 +100,10 @@ namespace Music2Game_MapMaker {
             // Sequencia de alturas das "telas"
             List<int> baseHeights = SetHeights(music, staticRoles, globalReference);
 
-            // Lista de inimigos
+            // Transforma a sequencia de alturas base (por compasso) em alturas "por quadro"
+            List<int> gridHeights = MeasureToGrid(baseHeights);
+
+            // Lista de desafios
             Console.Write("Adicionando desafios... ");
             List<Tuple<int, int>> enemies = SetEnemies(music);
             Console.WriteLine("OK");
@@ -99,9 +111,6 @@ namespace Music2Game_MapMaker {
             //foreach(var chl in enemies) {
             //    Console.WriteLine("{0} >> {1}", chl.Item1, chl.Item2);
             //}
-
-            // Transforma a sequencia de alturas base (por compasso) em alturas "por quadro"
-            List<int> gridHeights = MeasureToGrid(baseHeights);
 
             // Gera novos abismos (ou plataformas e regiões "abissais")
             if (restCount) {
@@ -234,6 +243,7 @@ namespace Music2Game_MapMaker {
             // Calcula altura finais a partir dos "delta" em baseHeights
             int height;
             foreach (int h in baseHeights) {
+                //Console.WriteLine("   !!! {0}", h);
                 height = gridHeights.Last() + h;
                 for (int gg = 0; gg < MEASURE; gg++) {
                     gridHeights.Add(height);

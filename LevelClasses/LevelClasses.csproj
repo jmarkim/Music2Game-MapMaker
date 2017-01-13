@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9C2FA7E9-9C03-4AD3-B9D9-F6C76FB39AD9}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{D91A092B-5F25-46B9-8B7C-BD55D7745A8C}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Music2Game_MapMaker</RootNamespace>
-    <AssemblyName>Music2Game-MapMaker</AssemblyName>
+    <RootNamespace>LevelClasses</RootNamespace>
+    <AssemblyName>LevelClasses</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,8 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MusicXml">
-      <HintPath>..\..\..\..\..\C#\MusicXml.Net\MusicXml\bin\Release\MusicXml.dll</HintPath>
+    <Reference Include="MusicScore">
+      <HintPath>..\..\MusicScore\MusicScore\bin\Debug\MusicScore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,21 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Abyss.cs" />
+    <Compile Include="Challenge.cs" />
+    <Compile Include="Level.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\MusicScore\MusicScore\MusicScore.csproj">
-      <Project>{a03e1770-48d3-4630-87bb-09b599b60d54}</Project>
-      <Name>MusicScore</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LevelClasses\LevelClasses.csproj">
-      <Project>{d91a092b-5f25-46b9-8b7c-bd55d7745a8c}</Project>
-      <Name>LevelClasses</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
