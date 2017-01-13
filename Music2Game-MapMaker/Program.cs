@@ -20,7 +20,7 @@ namespace Music2Game_MapMaker {
         private static int DELTA_THRESHOLD = int.MaxValue;
         private static int MEASURE_FRACTION = 3; // Tamanho mínima de nota geradora de abismos (fração do tamanho do compasso)
         private static int MINIMUN_HEIGHT = 3; // Alutra mínima paa plataformas flutuantes
-        private static string VERSION = "0.5.0";
+        private static string VERSION = "0.5.1";
 
         static void Main(string[] args) {
 

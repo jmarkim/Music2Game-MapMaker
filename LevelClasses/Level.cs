@@ -24,7 +24,7 @@ namespace LevelClasses {
         internal static Brush BACKGROUND_NORMAL = Brushes.Lavender;
         internal static Brush PLATFORM_DEEP = Brushes.Sienna;
         internal static Brush PLATFORM_SURFACE = Brushes.LawnGreen;
-        internal static Brush ABYSS_BACKGROUND = Brushes.MistyRose;
+        internal static Brush ABYSS_BACKGROUND = Brushes.Lavender;
         internal static Pen ABYSS_LINE = new Pen(Brushes.Red, 2);
 
         // Largura da fase em quadros (corresponde à área de música)
@@ -314,7 +314,7 @@ namespace LevelClasses {
            if (abyss) {
                 width = (intensity / measureSize) % MAXIMUM_WIDTH + 1; // Largura do abismo
                 offset = intensity % (MEASURE_SIZE - width); // Início do abismo na seção
-                posX = measureNumber * MEASURE_SIZE + offset; // Posição absoluta do abismo
+                posX = SCREEN_SIZE + measureNumber * MEASURE_SIZE + offset; // Posição absoluta do abismo
 
                 _abysses.Add(new Abyss(posX, _geography[measureNumber], width));
             }

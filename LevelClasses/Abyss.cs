@@ -32,11 +32,13 @@ namespace LevelClasses {
                     for (int xx = 0; xx < abyss.Width; xx++) {
                         grid.X = (abyss.PosX + xx) * Level.GRID_SIZE;
 
-                        for (int yy = 0; yy <= abyss.PosY; yy++) {
+                        for (int yy = 0; yy < abyss.PosY; yy++) {
                             grid.Y = img.Height - yy * Level.GRID_SIZE;
                             g.FillRectangle(Level.ABYSS_BACKGROUND, grid);
                             g.DrawLine(Level.ABYSS_LINE, grid.Left, grid.Bottom, grid.Right, grid.Top);
                         }
+                        grid.Y = img.Height - abyss.PosY;
+                        g.FillRectangle(Level.ABYSS_BACKGROUND, grid);
                     }
                 }
             }
