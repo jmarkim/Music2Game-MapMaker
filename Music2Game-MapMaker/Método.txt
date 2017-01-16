@@ -34,3 +34,9 @@ Desafios
    D  -> Inimigos ativos (bloco Vermelho Escuro) (Hammer bros.)
    bM -> Obstaculos inertes (bloco Cinza Escuro) (Canos)
    bT -> nada (bloco Cinza Claro)
+
+
+IMAGENS
+	0.5.2 : Nota menos ativa, Chance = <intensidade> % 5 == 4
+	0.5.3 : Nota menos ativa, Chance = <intensidade> * <peso> > <tamanho_Compasso>, peso = 1
+	0.5.4 : X Nota menos ativa, Chance = <intensidade> * <peso> > <tamanho_Compasso>, peso = 1

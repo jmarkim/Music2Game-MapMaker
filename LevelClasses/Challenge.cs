@@ -23,6 +23,6 @@ namespace LevelClasses {
             set { y = value; }
         }
 
-        public abstract void Draw(Bitmap img, Challenge challenge);
+        public abstract void Draw(Bitmap img);
     }
 }

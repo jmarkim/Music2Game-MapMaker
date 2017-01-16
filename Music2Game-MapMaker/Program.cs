@@ -7,6 +7,8 @@ using MusicScore;
 using System.Drawing;
 using System.Drawing.Imaging;
 using LevelClasses;
+using System.IO;
+using System.IO.Compression;
 
 namespace Music2Game_MapMaker {
     class Program {
@@ -20,9 +22,19 @@ namespace Music2Game_MapMaker {
         private static int DELTA_THRESHOLD = int.MaxValue;
         private static int MEASURE_FRACTION = 3; // Tamanho mínima de nota geradora de abismos (fração do tamanho do compasso)
         private static int MINIMUN_HEIGHT = 3; // Alutra mínima paa plataformas flutuantes
-        private static string VERSION = "0.5.1";
+        private static string VERSION = "0.5.7";
 
         static void Main(string[] args) {
+            //Variáveis
+            string root = AppDomain.CurrentDomain.BaseDirectory; // Diretório da aplicação
+            string musicPath = root + "Music"; // Diretório de músicas
+            string[] files; // Arquivos no diretório de músicas
+            string musicName;
+            bool isMusicXML;
+            FileInfo musicFile;
+            StreamReader reader;
+            Score musicScore;
+            Level map;
 
             // Log (Console) de Características
             Console.WriteLine("Versão do algoitmo : {0}", VERSION);
@@ -30,57 +42,124 @@ namespace Music2Game_MapMaker {
             Console.WriteLine("Tamanho do compasso : {0} quadros", MEASURE);
             Console.WriteLine("Tamanho da tela : {0} quadros", SCREEN);
 
+            Console.WriteLine();
+            Console.WriteLine("Diretório base da aplicação : {0}", root);
+
+            // Localiza diretório de músicas
+            if (!System.IO.Directory.Exists(musicPath)) {
+                Console.WriteLine("  Diretório de músicas inexistente ({0})", musicPath);
+            }
+
+            // Localiza ou cria diretório de Imagens
+            if (!Directory.Exists(root + "Imagens")) {
+                Directory.CreateDirectory(root + "Imagens");
+            }
+
+            // Localiza ou cria sub-diretório da versão atual
+            if (!Directory.Exists(root + "Imagens\\" + VERSION)) {
+                Directory.CreateDirectory(root + "Imagens\\" + VERSION);
+            }
+
+            // Recupera músicas no diretório
+            files = System.IO.Directory.GetFiles(musicPath);
+            Console.WriteLine("Músicas encontradas :");
+
+            // Itera sobre arquivos
+            foreach (var music in files) {
+                musicFile = new System.IO.FileInfo(music);
+
+                // Checa se arquivo é musicXML
+                if (musicFile.Extension == ".mxl") {
+                    musicName = musicFile.Name.Remove(musicFile.Name.Length - 4);
+                    Console.Write("   -> {0} ", musicName);
+
+                    // musicXML é um arquivo compactado sob o padrão zip, iterar sobre os arquivos internos em busca do xml com a partitura
+                    foreach (var entry in ZipFile.OpenRead(musicFile.FullName).Entries) {
+                        isMusicXML = false;
+
+                        // Identifica arquivos xml
+                        if (entry.Name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) {
+
+                            // Confirma se o arquivo xml realmente é um musicXML, o .mxl também contém outro xml (\META-INF\container.xml)
+                            reader = new StreamReader(entry.Open());
+                            reader.ReadLine();
+                            if (reader.ReadLine().Contains("score") ) {
+                                isMusicXML = true;
+                            }
+                            reader.Close();
+
+                            // Gera os arquivos de fase
+                            if (isMusicXML) {
+                                entry.ExtractToFile(musicPath + "\\tempMusic.xml");
+                                musicScore = ScoreBuilder.FromXML(musicPath + "\\tempMusic.xml");
+                                map = new Level(musicScore);
+                                map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
+                                Console.Write(" >> Imagem criada");
+                                System.IO.File.Delete(musicPath + "\\tempMusic.xml");
+                            }
+
+                        }
+
+                    }
+
+                    Console.WriteLine();
+                }
+
+            }
+            //System.IO.DirectoryInfo musicDir = new System.IO.DirectoryInfo(musicPath);
+
+
             // Representação da partitura
-            Score music = ScoreBuilder.FromXML(args[0]);
+            //Score music = ScoreBuilder.FromXML(args[0]);
 
             // Nome do arquivo (sem extensão)
-            string name = args[0].Remove(args[0].Length - 4);
+            //string name = args[0].Remove(args[0].Length - 4);
 
             // Objeto Level
-            LevelClasses.Level map = new LevelClasses.Level(music);
-            map.SaveImage(name + "_final[" + VERSION + "]");
+            //LevelClasses.Level map = new LevelClasses.Level(music);
+            //map.SaveImage(name + "_final[" + VERSION + "]");
 
             // Métdo : Sequência de alturas por compasso
-            Console.WriteLine();
+            //Console.WriteLine();
             //Console.WriteLine("Criando mapas utilizando o método: Sequência de alturas");
-            try {
-                //Refrência Estática
-                //HeightsSequence(music, name, true, true, true, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, true, true, false);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, true, false, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, true, false, false);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, false, true, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, false, true, false);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, false, false, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, true, false, false, false);
-                //Console.WriteLine();
+            //try {
+            //Refrência Estática
+            //HeightsSequence(music, name, true, true, true, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, true, true, false);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, true, false, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, true, false, false);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, false, true, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, false, true, false);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, false, false, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, true, false, false, false);
+            //Console.WriteLine();
 
-                //Referência Dinâmica
-                //HeightsSequence(music, name, false, true, true, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, true, true, false);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, true, false, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, true, false, false);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, false, true, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, false, true, false);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, false, false, true);
-                //Console.WriteLine();
-                //HeightsSequence(music, name, false, false, false, false);
-            } catch (Exception ex) {
-                Console.Error.WriteLine(ex.Message);
-            }
+            //Referência Dinâmica
+            //HeightsSequence(music, name, false, true, true, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, true, true, false);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, true, false, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, true, false, false);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, false, true, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, false, true, false);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, false, false, true);
+            //Console.WriteLine();
+            //HeightsSequence(music, name, false, false, false, false);
+            //} catch (Exception ex) {
+            //    Console.Error.WriteLine(ex.Message);
+            //}
         }
 
         public static void HeightsSequence(Score music, string name, bool staticRoles, bool globalReference, bool restCount, bool mostActive) {

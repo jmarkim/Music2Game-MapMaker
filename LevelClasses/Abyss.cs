@@ -9,6 +9,9 @@ using System.Drawing.Imaging;
 namespace LevelClasses {
     public class Abyss : Challenge {
 
+        internal static Brush ABYSS_BACKGROUND = Brushes.Lavender;
+        internal static Pen ABYSS_LINE = new Pen(Brushes.Red, 2);
+
         // Lagura do abismo
         private int _width;
         public int Width {
@@ -23,25 +26,23 @@ namespace LevelClasses {
             _width = width;
         }
 
-        public override void Draw(Bitmap img, Challenge challenge) {
-            Abyss abyss = challenge as Abyss;
+        public override void Draw(Bitmap img) {
             Rectangle grid = new Rectangle(0, 0, Level.GRID_SIZE, Level.GRID_SIZE);
 
-            if (abyss != null) {
-                using (Graphics g = Graphics.FromImage(img)) {
-                    for (int xx = 0; xx < abyss.Width; xx++) {
-                        grid.X = (abyss.PosX + xx) * Level.GRID_SIZE;
+            using (Graphics g = Graphics.FromImage(img)) {
+                for (int xx = 0; xx < _width; xx++) {
+                    grid.X = (PosX + xx) * Level.GRID_SIZE;
 
-                        for (int yy = 0; yy < abyss.PosY; yy++) {
-                            grid.Y = img.Height - yy * Level.GRID_SIZE;
-                            g.FillRectangle(Level.ABYSS_BACKGROUND, grid);
-                            g.DrawLine(Level.ABYSS_LINE, grid.Left, grid.Bottom, grid.Right, grid.Top);
-                        }
-                        grid.Y = img.Height - abyss.PosY * Level.GRID_SIZE;
-                        g.FillRectangle(Level.ABYSS_BACKGROUND, grid);
+                    for (int yy = 0; yy < PosY; yy++) {
+                        grid.Y = img.Height - yy * Level.GRID_SIZE;
+                        g.FillRectangle(ABYSS_BACKGROUND, grid);
+                        g.DrawLine(ABYSS_LINE, grid.Left, grid.Bottom, grid.Right, grid.Top);
                     }
+                    grid.Y = img.Height - PosY * Level.GRID_SIZE;
+                    g.FillRectangle(ABYSS_BACKGROUND, grid);
                 }
             }
+            
         }
 
     }

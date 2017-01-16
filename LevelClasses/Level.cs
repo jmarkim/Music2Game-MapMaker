@@ -16,7 +16,10 @@ namespace LevelClasses {
         internal static int SCREEN_SIZE = 32; // Tamanho de uma tela em quadros (horizontal)
         internal static int CEILING_HEIGHT = 40; // Altura do teto em relação à plataforma mais alta
         internal static int HEIGHT_MODIFIER = 5; // Valor pelo qual "delta" é multiplicado antes de dividido pelo tamanho do compasso
-        internal static int MAXIMUM_WIDTH = 5; // Largura máxima de abismos
+        internal static int MAXIMUM_WIDTH = 16; // Largura máxima (soma) de abismos em uma seção
+        internal static int MINIMUM_WIDTH = 4; // Largura mínima (soma) de abismos em um seção
+        internal static int ABYSS_THRESHOLD = 8; // Largura mínima de uma abismo para que seja coberto por blocos que caem
+        internal static double ABYSS_CHANCE = 0.3; // Define o limiar de intensidade para geração de abismos
 
         // Definições para geração de Imagens
         internal static int GRID_SIZE = 10; // Tamanho do lado do grid (usado para gerção da imagem)
@@ -24,8 +27,10 @@ namespace LevelClasses {
         internal static Brush BACKGROUND_NORMAL = Brushes.Lavender;
         internal static Brush PLATFORM_DEEP = Brushes.Sienna;
         internal static Brush PLATFORM_SURFACE = Brushes.LawnGreen;
-        internal static Brush ABYSS_BACKGROUND = Brushes.Lavender;
-        internal static Pen ABYSS_LINE = new Pen(Brushes.Red, 2);
+        internal static Pen PLATFORM_DEEP_LINE = new Pen(Brushes.Maroon, 2);
+        internal static Pen SCREEN_BOUNDS_LINE = Pens.Red;
+        internal static Pen MEASURE_BOUNDS_LINE = Pens.PaleVioletRed;
+
 
         // Largura da fase em quadros (corresponde à área de música)
         private int _width;
@@ -209,6 +214,7 @@ namespace LevelClasses {
             int measureCount = music.MeasureCount; // Quantidade de Compassos da música
             int partCount = music.PartCount; // Quantidade de Instrumentos da música
             List<int> sum = new List<int>(); // Soma dos deltas (valor final de Δh)
+            List<MeasureElement> abyssNotes = new List<MeasureElement>();
 
             Measure currentMeasure = null; // Compasso sendo trabalhado
 
@@ -263,6 +269,7 @@ namespace LevelClasses {
                 for (int ii = 0; ii < 7; ii++) {
                     sum[ii] = 0;
                 }
+                abyssNotes.Clear();
 
                 for (int partNumer = 0; partNumer < partCount; partNumer++) {
                     currentMeasure = music.Parts[partNumer].Measures[measureNumber];
@@ -284,6 +291,7 @@ namespace LevelClasses {
                                 sum[5] += note.Duration;
                             } else if (note.Note.Role == Abyss) {
                                 sum[6] += note.Duration;
+                                abyssNotes.Add(note);
                             }
 
                         }
@@ -292,7 +300,7 @@ namespace LevelClasses {
                 }
 
                 // TODO : Processar resultados
-                SetAbyss(measureNumber, currentMeasure.Size, sum[6]);
+                SetAbyss(measureNumber, currentMeasure.Size, partCount, sum[6], abyssNotes);
                 //SetFloatingBlocks(measureNumber, currentMeasure.Size, sum[0])
                 //SetObstacles(measureNumber, currentMeasure.Size, sum[1]);
                 //SetPassiveEnemies(measureNumber, currentMeasure.Size, sum[2]);
@@ -303,20 +311,31 @@ namespace LevelClasses {
 
         }
 
-        internal void SetAbyss(int measureNumber, int measureSize, int intensity) {
-            //Console.WriteLine("   !!! Level.SetAbyss() : Seção = {0}; Tamanho = {1}; Intensidade = {2}", measureNumber, measureSize, intensity);
-            bool abyss = intensity % 5 - 3 > 0; // 20% de geração
+        internal void SetAbyss(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
+            int nextValidPosition = 0;
             int width;
+            int position;
             int offset;
-            int posX;
 
-            // Define largura do abismo
-           if (abyss) {
-                width = (intensity / measureSize) % MAXIMUM_WIDTH + 1; // Largura do abismo
-                offset = intensity % (MEASURE_SIZE - width); // Início do abismo na seção
-                posX = SCREEN_SIZE + measureNumber * MEASURE_SIZE + offset; // Posição absoluta do abismo
+            sources.Sort((a,b) => a.Position.CompareTo(b.Position));
 
-                _abysses.Add(new Abyss(posX, _geography[measureNumber], width));
+            foreach (var src in sources) {
+                if (src.Position >= nextValidPosition) {
+                    width = MEASURE_SIZE * src.Duration / measureSize / 2;
+                    position = MEASURE_SIZE * src.Position / measureSize;
+                    offset = SCREEN_SIZE + measureNumber * MEASURE_SIZE + position + intensity % (width + 1);
+                    if (width < 2) {
+                        nextValidPosition = src.Position + measureSize * 3 / MEASURE_SIZE;
+                        width = 2;
+                    } else {
+                        nextValidPosition = src.Position + src.Duration;
+                    }
+                    if (position + width > MEASURE_SIZE) {
+                        width = MEASURE_SIZE - position;
+                    }
+                    _abysses.Add(new Abyss(offset, _geography[measureNumber], width));
+
+                }
             }
         }
 
@@ -332,33 +351,56 @@ namespace LevelClasses {
                 DrawSpecialSection(img, false, _geography.Last());
 
                 foreach (var abyss in _abysses) {
-                    abyss.Draw(img, abyss);
+                    abyss.Draw(img);
                 }
 
-                //foreach (var challenge in _challenges) {
-                //  
-                //}
+                foreach (var challenge in _challenges) {
+                    challenge.Draw(img);  
+                }
 
+                DrawMeasureBounds(img);
+                DrawScreenBounds(img);
                 img.Save(name + ".png", ImageFormat.Png);
+
             }
         }
 
-        //internal void DrawAbyss(Bitmap img, Abyss abyss) {
-        //    Rectangle grid = new Rectangle(0, 0, GRID_SIZE, GRID_SIZE);
-        //    using (Graphics g = Graphics.FromImage(img)) {
-        //        for (int xx = 0; xx < abyss.Width; xx++) {
-        //            grid.X = (abyss.PosX + xx) * GRID_SIZE;
+        internal void DrawScreenBounds(Bitmap img) {
+            using (Graphics g = Graphics.FromImage(img)) {
+                int posX = SCREEN_SIZE * GRID_SIZE;
+                while (posX < img.Width) {
+                    g.DrawLine(SCREEN_BOUNDS_LINE, posX, 0, posX, img.Height);
+                    posX += SCREEN_SIZE * GRID_SIZE;
+                }
+            }
+        }
 
-        //            for (int yy = 0; yy < abyss.PosY; yy++) {
-        //                grid.Y = img.Height - yy * GRID_SIZE;
-        //                g.FillRectangle(BACKGROUND_SPECIAL, grid);
-        //                g.DrawLine(new Pen(Brushes.HotPink, 2), grid.Left, grid.Bottom, grid.Right, grid.Top);
-        //            }
-        //        }
-        //    }
-        //}
+        internal void DrawMeasureBounds(Bitmap img) {
+            using (Graphics g = Graphics.FromImage(img)) {
+                int posX = MEASURE_SIZE * GRID_SIZE;
+                while (posX < img.Width) {
+                    g.DrawLine(MEASURE_BOUNDS_LINE, posX, 0, posX, img.Height);
+                    posX += MEASURE_SIZE * GRID_SIZE;
+                }
+            }
+        }
 
-        internal void DrawSection(Bitmap img, int sectionNumber, int sectionHeight) {
+    //internal void DrawAbyss(Bitmap img, Abyss abyss) {
+    //    Rectangle grid = new Rectangle(0, 0, GRID_SIZE, GRID_SIZE);
+    //    using (Graphics g = Graphics.FromImage(img)) {
+    //        for (int xx = 0; xx < abyss.Width; xx++) {
+    //            grid.X = (abyss.PosX + xx) * GRID_SIZE;
+
+    //            for (int yy = 0; yy < abyss.PosY; yy++) {
+    //                grid.Y = img.Height - yy * GRID_SIZE;
+    //                g.FillRectangle(BACKGROUND_SPECIAL, grid);
+    //                g.DrawLine(new Pen(Brushes.HotPink, 2), grid.Left, grid.Bottom, grid.Right, grid.Top);
+    //            }
+    //        }
+    //    }
+    //}
+
+    internal void DrawSection(Bitmap img, int sectionNumber, int sectionHeight) {
             Rectangle grid = new Rectangle(0, 0, GRID_SIZE, GRID_SIZE);
             using (Graphics g = Graphics.FromImage(img)) {
                 for (int xx = 0; xx < MEASURE_SIZE; xx++) {
@@ -367,7 +409,7 @@ namespace LevelClasses {
                     for (int yy = 0; yy < sectionHeight; yy++) {
                         grid.Y = img.Height - yy * GRID_SIZE;
                         g.FillRectangle(PLATFORM_DEEP, grid);
-                        g.DrawLine(new Pen(Brushes.Maroon, 2), grid.Left, grid.Bottom, grid.Right, grid.Top);
+                        g.DrawLine(PLATFORM_DEEP_LINE, grid.Left, grid.Bottom, grid.Right, grid.Top);
                     }
 
                     grid.Y = img.Height - sectionHeight * GRID_SIZE;

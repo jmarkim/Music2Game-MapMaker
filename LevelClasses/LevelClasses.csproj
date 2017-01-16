@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Abyss.cs" />
     <Compile Include="Challenge.cs" />
+    <Compile Include="FallingBlock.cs" />
     <Compile Include="Level.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
