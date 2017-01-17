@@ -272,6 +272,8 @@ namespace LevelClasses {
                     sum[ii] = 0;
                 }
                 abyssNotes.Clear();
+                ActiveEnemiesNotes.Clear();
+                PassiveEnemiesNotes.Clear();
 
                 for (int partNumer = 0; partNumer < partCount; partNumer++) {
                     currentMeasure = music.Parts[partNumer].Measures[measureNumber];
