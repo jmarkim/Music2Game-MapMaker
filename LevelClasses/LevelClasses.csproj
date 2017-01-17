@@ -45,9 +45,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abyss.cs" />
+    <Compile Include="ActiveEnemy.cs" />
     <Compile Include="Challenge.cs" />
     <Compile Include="FallingBlock.cs" />
     <Compile Include="Level.cs" />
+    <Compile Include="PassiveEnemy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

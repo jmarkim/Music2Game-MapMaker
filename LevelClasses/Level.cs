@@ -215,6 +215,8 @@ namespace LevelClasses {
             int partCount = music.PartCount; // Quantidade de Instrumentos da música
             List<int> sum = new List<int>(); // Soma dos deltas (valor final de Δh)
             List<MeasureElement> abyssNotes = new List<MeasureElement>();
+            List<MeasureElement> ActiveEnemiesNotes = new List<MeasureElement>();
+            List<MeasureElement> PassiveEnemiesNotes = new List<MeasureElement>();
 
             Measure currentMeasure = null; // Compasso sendo trabalhado
 
@@ -283,10 +285,12 @@ namespace LevelClasses {
                                 sum[1] += note.Duration;
                             } else if (note.Note.Role == PassiveEnemies) {
                                 sum[2] += note.Duration;
+                                PassiveEnemiesNotes.Add(note);
                             } else if (note.Note.Role == Others) {
                                 sum[3] += note.Duration;
                             } else if (note.Note.Role == ActiveEnemies) {
                                 sum[4] += note.Duration;
+                                ActiveEnemiesNotes.Add(note);
                             } else if (note.Note.Role == Traps) {
                                 sum[5] += note.Duration;
                             } else if (note.Note.Role == Abyss) {
@@ -303,19 +307,99 @@ namespace LevelClasses {
                 SetAbyss(measureNumber, currentMeasure.Size, partCount, sum[6], abyssNotes);
                 //SetFloatingBlocks(measureNumber, currentMeasure.Size, sum[0])
                 //SetObstacles(measureNumber, currentMeasure.Size, sum[1]);
-                //SetPassiveEnemies(measureNumber, currentMeasure.Size, sum[2]);
+                SetPassiveEnemies(measureNumber, currentMeasure.Size, partCount, sum[2], PassiveEnemiesNotes);
                 //SetOthers(measureNumber, currentMeasure.Size, sum[3]);
-                //SetActiveEnemies(measureNumber, currentMeasure.Size, sum[4]);
+                SetActiveEnemies(measureNumber, currentMeasure.Size, partCount, sum[4], ActiveEnemiesNotes);
                 //SetTraps(measureNumber, currentMeasure.Size, sum[5]);
             }
 
         }
 
+        internal void SetPassiveEnemies(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
+            int position; // Posição dentro da seção
+            int offset; // Posição absoluta
+            bool flying;
+            bool abyss;
+            int nextValidPosition = 0;
+
+            sources.Sort((a, b) => a.Position.CompareTo(b.Position));
+
+            if (intensity < measureSize * partCount / 3) {
+                return;
+            }
+
+            foreach (var src in sources) {
+                position = MEASURE_SIZE * src.Position / measureSize;
+                offset = SCREEN_SIZE + measureNumber * MEASURE_SIZE + position;
+                nextValidPosition = src.Position + src.Duration + 3 * measureSize / MEASURE_SIZE;
+                flying = intensity > MEASURE_SIZE * 0.90 ;
+
+                if (flying) {
+                    _challenges.Add(new PassiveEnemy(offset, _geography[measureNumber] + 11, true));
+                } else {
+                    abyss = false;
+                    foreach (var abs in _abysses) {
+                        if (abs.PosX < SCREEN_SIZE + measureNumber * MEASURE_SIZE) {
+                            continue;
+                        }
+                        if (offset >= abs.PosX && offset < abs.PosX + abs.Width) {
+                            abyss = true;
+                            break;
+                        }
+                    }
+                    if (!abyss) {
+                        _challenges.Add(new PassiveEnemy(offset, _geography[measureNumber] + 1, false));
+                    }
+                }
+
+            }
+        }
+
+        internal void SetActiveEnemies(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
+            int position; // Posição dentro da seção
+            int offset; // Posição absoluta
+            bool flying;
+            bool abyss;
+            int nextValidPosition = 0;
+
+            sources.Sort((a, b) => a.Position.CompareTo(b.Position));
+
+            if (intensity < measureSize * partCount / 2) {
+                return;
+            }
+
+            foreach (var src in sources) {
+                position = MEASURE_SIZE * src.Position / measureSize;
+                offset = SCREEN_SIZE + measureNumber * MEASURE_SIZE + position;
+                nextValidPosition = src.Position + src.Duration + 6 * measureSize / MEASURE_SIZE;
+                flying = intensity > MEASURE_SIZE * 0.90;
+
+                if (flying) {
+                    _challenges.Add(new ActiveEnemy(offset, _geography[measureNumber] + 11, true));
+                } else {
+                    abyss = false;
+                    foreach (var abs in _abysses) {
+                        if (abs.PosX < SCREEN_SIZE + measureNumber * MEASURE_SIZE) {
+                            continue;
+                        }
+                        if (offset >= abs.PosX && offset < abs.PosX + abs.Width) {
+                            abyss = true;
+                            break;
+                        }
+                    }
+                    if (!abyss) {
+                        _challenges.Add(new ActiveEnemy(offset, _geography[measureNumber] + 1, false));
+                    }
+                }
+
+            }
+        }
+
         internal void SetAbyss(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
             int nextValidPosition = 0;
-            int width;
-            int position;
-            int offset;
+            int width; 
+            int position; // Posição dentro da seção
+            int offset; // Posição absoluta
 
             sources.Sort((a,b) => a.Position.CompareTo(b.Position));
 
