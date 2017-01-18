@@ -60,6 +60,16 @@ namespace Music2Game_MapMaker {
                 Directory.CreateDirectory(root + "Imagens\\" + VERSION);
             }
 
+           // Localiza ou cria sub-diretório de Níveis em TXT
+           if (!Directory.Exists(root + "Niveis")) {
+                Directory.CreateDirectory(root + "Niveis\\");
+            }
+
+            // Localiza ou cria sub-diretório de Níveis em TXT da versão atual
+            if (!Directory.Exists(root + "Niveis\\" + VERSION)) {
+                Directory.CreateDirectory(root + "Niveis\\" + VERSION);
+            }
+
             // Recupera músicas no diretório
             files = System.IO.Directory.GetFiles(musicPath);
             Console.WriteLine("Músicas encontradas :");
@@ -88,12 +98,18 @@ namespace Music2Game_MapMaker {
                             }
                             reader.Close();
 
+                            // Checa e deleta tempMusic.xml para evitar conflitos
+                            if (File.Exists(musicPath + "\\tempMusic.xml")) {
+                                File.Delete(musicPath + "\\tempMusic.xml");
+                            }
+                            
                             // Gera os arquivos de fase
                             if (isMusicXML) {
                                 entry.ExtractToFile(musicPath + "\\tempMusic.xml");
                                 musicScore = ScoreBuilder.FromXML(musicPath + "\\tempMusic.xml");
                                 map = new Level(musicScore);
                                 map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
+                                map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
                                 Console.Write(" >> Imagem criada");
                                 System.IO.File.Delete(musicPath + "\\tempMusic.xml");
                             }

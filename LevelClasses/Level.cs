@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MusicScore;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 
 namespace LevelClasses {
     public class Level
@@ -410,6 +411,9 @@ namespace LevelClasses {
                     width = MEASURE_SIZE * src.Duration / measureSize / 2;
                     position = MEASURE_SIZE * src.Position / measureSize;
                     offset = SCREEN_SIZE + measureNumber * MEASURE_SIZE + position + intensity % (width + 1);
+                    if (offset >= _width) {
+                        continue;
+                    }
                     if (width < 2) {
                         nextValidPosition = src.Position + measureSize * 3 / MEASURE_SIZE;
                         width = 2;
@@ -421,6 +425,51 @@ namespace LevelClasses {
                     }
                     _abysses.Add(new Abyss(offset, _geography[measureNumber], width));
 
+                }
+            }
+        }
+
+        public void SaveText(string path, string musicName) {
+            using (StreamWriter file = new StreamWriter(path + musicName + ".txt", false)) {
+                // Cabeçalho
+                file.WriteLine(musicName);
+                file.Write(_width + 2 * SCREEN_SIZE);
+                file.WriteLine(" " + _height);
+
+                //Alturas
+                //   Início
+                file.Write(_geography.First());
+                for (int ii = 1; ii < SCREEN_SIZE; ii++) {
+                    file.Write(" " + _geography.First());
+                }
+                //   Música
+                //      Cria estrutura temporária para armazenar alturas
+                List<int> gridGeography = new List<int>(_width);
+                foreach (int h in _geography) {
+                    for (int ii = 0; ii < MEASURE_SIZE; ii++) {
+                        gridGeography.Add(h);
+                    }
+                }
+                //      Atualiza alturas para introduzir abismos
+                foreach (var abs in _abysses) {
+                    //Console.WriteLine(" !! Abismo: p: {0}, w: {1}; W: {2}", abs.PosX, abs.Width, _width);
+                    for (int xx = abs.PosX; xx < abs.PosX + abs.Width; xx++) {
+                        gridGeography[xx] = 0;
+                    }
+                }
+                //      Escreve geografia
+                foreach (int h in gridGeography) {
+                    file.Write(" " + h);
+                }
+                //   Fim
+                for (int ii = 0; ii < SCREEN_SIZE; ii++) {
+                    file.Write(" " + _geography.Last());
+                }
+
+                // Lista inimigos e outros recursos;
+                file.WriteLine();
+                foreach (var chl in _challenges) {
+                    file.WriteLine(chl.PosX + " " + chl.PosY + " " + chl.GetType());
                 }
             }
         }
