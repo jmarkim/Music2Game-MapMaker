@@ -11,6 +11,13 @@ namespace LevelClasses {
         internal static Brush PASSIVE_ENEMY_COLOR = Brushes.Crimson;
         internal static Pen PASSIVE_ENEMY_FLY = Pens.Red;
 
+        // Indica tipo do inimigo
+        private int _kind;
+        public int Kind {
+            get { return _kind; }
+            set { _kind = value; }
+        }
+
         // Indica se o inimigo é voador
         private bool _fly;
         public bool Fly {
@@ -19,9 +26,10 @@ namespace LevelClasses {
         }
 
         // Construtor
-        public PassiveEnemy(int posX, int posY, bool flyingEnemy) {
+        public PassiveEnemy(int posX, int posY, int kind, bool flyingEnemy) {
             PosX = posX;
             PosY = posY;
+            _kind = kind;
             _fly = flyingEnemy;
         }
 

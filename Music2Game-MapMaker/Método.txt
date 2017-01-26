@@ -1,42 +1,36 @@
-Da Wikipedia a funcao das notas na Escala sao:
-   [T]   Tonica : Referencia hierarquica e resolucao do conflito. "Ponto final"
-   [pT] Super-tonica : Gravita em torno da Dominante
-   [M]   Mediante : Meio termo entre Tonica e Dominante
-   [bD]  Sub-dominante : Simetrico da Dominante (A Tonica e a Dominante em relacao a Sub-dominante)
-   [D]   Domiante : Gera instabilidade para ser resolvida pela Tonica. "Virgula"
-   [bM]  Sub-mediante : Meio termo entre Sub-dominante e Tonica
-   [bT]  Sub-tonica : Nao encontrei nada significativo sobre ela. Normalmente e modificada para "dirigir" o ouvido de volta a Tonica
+HEIGHTS SEQUENCE
+  A fase e construida ao longo de multiplos loops (2) no primeiro loop as notas da musica sao analisadas compasso a compasso gerando a geografia da fase. No segundo loop as nootas sao analisadas para gerar os desafios.
+  A funcao de cada nota no processo e definida de acordo com sua presenca, ou seja, as notas da escala sao ordenadas de acordo com a quantidade de vezes que aparecem na partitura.
 
-Essas funcoes guiam o restante do metodo.
-Geografia base:
-   Os instrumentos sao analisados e cada compasso gera um ƒ¢h baseado nas notas do compasso. As plataformas comecam com altura H = 10 e a altura da regiao i e dada por Hi = H(i-1) + ƒ¢H(i), sendo ƒ¢H(i) o somatorio de todo ƒ¢h(i).
+  Geografia
+    1a - Referencia
+    2a - Elevacao
+    3a - Depressao
+    4a - Elevacao condicional
+    5a - Depressao condicional
+    6a - Correcao negativa
+    7a - Correcao positiva
 
-   T  -> ƒ¢h += X, se ƒ¢h < 0 .OU. ƒ¢h -= X, se ƒ¢h > 0
-   pT -> ƒ¢h += X, se ƒ¢h >= 0
-   M  -> ƒ¢h += X, se ƒ¢h < 0
-   bD -> ƒ¢h -= X
-   D  -> ƒ¢h += X
-   bM -> ƒ¢h -= X, se ƒ¢h > 0
-   bT -> ƒ¢h -= X, se ƒ¢h <= 0
-      X = Duracao da nota
-   Pausas sao ignoradas
-
-Abismos extras
-   O instrumento menos ativo e analisado nota a nota, um abismo e adicionado naquela posicao se a nota tem duracao maior que a metade do compasso onde se situa, o abismo gerado tem tamanho igual a metade da duracao da nota
-
-Desafios
-   O instrumento mais ativo e analisado nota a nota. Um desafio da categoria adequada e adicionado conforme a duracao da nota, notas curtas geram desafios mais faceis (ja que podem gerar desafios mais frequentes)
-
-   T  -> nada (bloco Transparente)
-   pT -> Obstaculos ativos (bloco Laranja) (Piranha plant)
-   M  -> Inimigos passivos (bloco Vermelho Claro / Violeta Avermelhado) (Goomba)
-   bD -> Obstaculos passivos (bloco Amarelo Claro (quase branco)) (Espinhos)
-   D  -> Inimigos ativos (bloco Vermelho Escuro) (Hammer bros.)
-   bM -> Obstaculos inertes (bloco Cinza Escuro) (Canos)
-   bT -> nada (bloco Cinza Claro)
+  Desafios
+    1a - Blocos flutuantes
+    2a - Obstaculos
+    3a - Inimigos Passivos
+    4a - NA
+    5a - Inimigos Ativos
+    6a - Armadilhas
+    7a - Abismos
 
 
-IMAGENS
-	0.5.2 : Nota menos ativa, Chance = <intensidade> % 5 == 4
-	0.5.3 : Nota menos ativa, Chance = <intensidade> * <peso> > <tamanho_Compasso>, peso = 1
-	0.5.4 : X Nota menos ativa, Chance = <intensidade> * <peso> > <tamanho_Compasso>, peso = 1
+SINGLE LOOP
+  A fase e construida com um unico loop analisando somente a um instrumento nota a nota.
+  A funcao de cada nota e definida de acordo com sua presenca, como definido anteriormente.
+  Para partituras que incluam multiplos instrumentos, uma fase e gerada para cada instrumento, elas sao medidas, e a "melhor" fasse e escolhida
+
+  Funcoes Plataforma = true / Plataforma = false
+    1a - Planicie	/ Plataforma flutuante em altura padrao
+    2a - Obstaculos	/ Plataforma flutuante fragil em altura padrao (caem)
+    3a - Inimigos P	/ Inimigos
+    4a - Elevacao	/ Plataforma flutuantem em altura elevada
+    5a - Depressao	/ Plataforma flutuante em altura reduzida
+    6a - Inimigo A	/ Inimigos
+    7a - Plataforma = t	/ Plataforma = f

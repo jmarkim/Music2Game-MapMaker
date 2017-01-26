@@ -18,10 +18,18 @@ namespace LevelClasses {
             set { _fly = value; }
         }
 
+        // Indica tipo do inimigo
+        private int _kind;
+        public int Kind {
+            get { return _kind; }
+            set { _kind = value; }
+        }
+
         // Construtor
-        public ActiveEnemy(int posX, int posY, bool flyingEnemy) {
+        public ActiveEnemy(int posX, int posY, int kind, bool flyingEnemy) {
             PosX = posX;
             PosY = posY;
+            _kind = kind;
             _fly = flyingEnemy;
         }
 

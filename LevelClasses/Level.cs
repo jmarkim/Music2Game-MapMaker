@@ -66,17 +66,21 @@ namespace LevelClasses {
         }
 
         // Construtor a partir de uma música
-        public Level(Score music) {
+        public void BuildHeightsSequence(Score music) {
             _width = MEASURE_SIZE * music.MeasureCount;
             _geography = new List<int>(music.MeasureCount);
             _challenges = new List<Challenge>();
             _abysses = new List<Abyss>();
-            BuildGeography(music);
-            BuildChallenges(music);
+            HSGeography(music);
+            HSChallenges(music);
             _height = _geography.Max() + CEILING_HEIGHT;
         }
 
-        public void BuildGeography(Score music) {
+        public void BuildSingleLoop(Score music) {
+
+        }
+
+        public void HSGeography(Score music) {
             // Definição dos papéis
             Scale Reference;
             Scale Elevation;
@@ -198,7 +202,7 @@ namespace LevelClasses {
             }
         }
 
-        internal void BuildChallenges(Score music) {
+        internal void HSChallenges(Score music) {
             // Definição dos papéis
             Scale FloatingBlocks;
             Scale Obstacles;
@@ -319,6 +323,62 @@ namespace LevelClasses {
         }
 
         internal void SetPassiveEnemies(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
+            // Quantas vezes a nota apareceu no trecho
+            int occurrences = sources.Count;
+            // Ocorrência média de notas por instrumento
+            int perInstrument = occurrences / partCount;
+
+            if (perInstrument < 1) {
+                return;
+            }
+
+            int count = 0;
+            int averagePosition = 0;
+            int totalDuration = 0;
+            int offset = 0;
+            int measureMark = SCREEN_SIZE + measureNumber * MEASURE_SIZE;
+            int position;
+            bool abyss;
+            int kind;
+            sources.Sort((a, b) => a.Position.CompareTo(b.Position));
+
+            foreach (var sample in sources) {
+                if (sample.Position >= offset && sample.Position < offset + measureSize / perInstrument) {
+                    // Acumula para tratamento
+                    count++;
+                    totalDuration += sample.Duration;
+                    averagePosition += sample.Position;
+                } else {
+                    // Trata valores acumulados
+                    if (count > 0) {
+                        averagePosition /= count; // Média das posições iniciais
+                        kind = totalDuration / partCount;
+                        position = MEASURE_SIZE * averagePosition / measureSize;
+                        abyss = false;
+
+                        foreach (Abyss abs in _abysses) {
+                            if (abs.PosX < measureMark) {
+                                continue;
+                            }
+                            if (measureMark + position >= abs.PosX && measureMark + position < abs.PosX + abs.Width) {
+                                abyss = true;
+                                break;
+                            }
+                        }
+                        if (!abyss) {
+                            _challenges.Add(new PassiveEnemy(measureMark + position, _geography[measureNumber] + 1, kind, false));
+                        }
+                    }
+
+                    // Reinicia o acumulo
+                    count = 1;
+                    averagePosition = sample.Position;
+                    totalDuration = sample.Duration;
+                    offset += measureSize / perInstrument;
+                }
+            }
+
+            /* VERSÃO 0.6.1
             int position; // Posição dentro da seção
             int offset; // Posição absoluta
             bool flying;
@@ -356,9 +416,67 @@ namespace LevelClasses {
                 }
 
             }
+            */
         }
 
         internal void SetActiveEnemies(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
+            // Quantas vezes a nota apareceu no trecho
+            int occurrences = sources.Count;
+            // Ocorrência média de notas por instrumento
+            int perInstrument = occurrences / partCount;
+
+            if (perInstrument < 1) {
+                return;
+            }
+
+            int count = 0;
+            int averagePosition = 0;
+            int totalDuration = 0;
+            int offset = 0;
+            int measureMark = SCREEN_SIZE + measureNumber * MEASURE_SIZE;
+            int position;
+            bool abyss;
+            int kind;
+            sources.Sort((a, b) => a.Position.CompareTo(b.Position));
+
+            foreach (var sample in sources) {
+                if (sample.Position >= offset && sample.Position < offset + measureSize / perInstrument) {
+                    // Acumula para tratamento
+                    count++;
+                    totalDuration += sample.Duration;
+                    averagePosition += sample.Position;
+                } else {
+                    // Trata valores acumulados
+                    if (count > 0) {
+                        averagePosition /= count; // Média das posições iniciais
+                        kind = totalDuration / partCount;
+                        position = MEASURE_SIZE * averagePosition / measureSize;
+                        abyss = false;
+
+                        foreach (Abyss abs in _abysses) {
+                            if (abs.PosX < measureMark) {
+                                continue;
+                            }
+                            if (measureMark + position >= abs.PosX && measureMark + position < abs.PosX + abs.Width) {
+                                abyss = true;
+                                break;
+                            }
+                        }
+                        if (!abyss) {
+                            _challenges.Add(new ActiveEnemy(measureMark + position, _geography[measureNumber] + 1, kind, false));
+                        }
+                    }
+
+                    // Reinicia o acumulo
+                    count = 1;
+                    averagePosition = sample.Position;
+                    totalDuration = sample.Duration;
+                    offset += measureSize / perInstrument;
+                }
+            }
+
+
+            /* VERSÃO 0.6.1
             int position; // Posição dentro da seção
             int offset; // Posição absoluta
             bool flying;
@@ -396,6 +514,7 @@ namespace LevelClasses {
                 }
 
             }
+            */
         }
 
         internal void SetAbyss(int measureNumber, int measureSize, int partCount, int intensity, List<MeasureElement> sources) {
