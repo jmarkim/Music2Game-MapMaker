@@ -108,10 +108,14 @@ namespace Music2Game_MapMaker {
                                 entry.ExtractToFile(musicPath + "\\tempMusic.xml");
                                 musicScore = ScoreBuilder.FromXML(musicPath + "\\tempMusic.xml");
                                 map = new Level();
-                                map.BuildHeightsSequence(musicScore);
-                                map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
-                                map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
-                                Console.Write(" >> Imagem criada");
+
+                                //map.BuildHeightsSequence(musicScore);
+                                //map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
+                                //map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
+                                //Console.Write(" >> Imagem criada");
+
+                                map.BuildSingleLoop(musicScore);
+
                                 System.IO.File.Delete(musicPath + "\\tempMusic.xml");
                             }
 

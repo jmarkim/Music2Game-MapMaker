@@ -77,7 +77,153 @@ namespace LevelClasses {
         }
 
         public void BuildSingleLoop(Score music) {
+            List<Scale> orderedScale;
+            int validMaps = 0;
 
+            foreach (var part in music.Parts) {
+                _geography = new List<int>();
+                _challenges = new List<Challenge>();
+                orderedScale = orderRoles(part);
+
+                // Validação e preparação para a fase
+                if (orderedScale.Count < 7) { // Checa se toda nota da escala está presente no instrumento
+                    Console.WriteLine();
+                    Console.WriteLine("   ! Instrumento não contém toda a escala musical");
+                    continue;
+                }
+
+                Scale createPlatform = orderedScale[0];
+                Scale raiseHeight = orderedScale[3];
+                Scale lowerHeight = orderedScale[4];
+
+                Console.WriteLine();
+                Console.WriteLine("1ª Cria plataforma : {0}", orderedScale[0]);
+                Console.WriteLine("2ª : {0}", orderedScale[1]);
+                Console.WriteLine("3ª : {0}", orderedScale[2]);
+                Console.WriteLine("4ª Elevação : {0}", orderedScale[3]);
+                Console.WriteLine("5ª Depressão : {0}", orderedScale[4]);
+                Console.WriteLine("6ª : {0}", orderedScale[5]);
+                Console.WriteLine("7ª : {0}", orderedScale[6]);
+
+                // Construção
+                int sectionStart = 0; // Início da última seção gerada
+                int sectionWidth = 0; // Largura da última seção gerada
+                int height = STARTING_HEIGHT;
+                bool platform = true; // Criando plataformas? se falso o algorítimo gera áreas de plataformas flutuantes
+                bool heightModifier = true; // Define se a última seção pode ter sua altura modificada
+                int measureSize = 0; // Tamanho do compasso
+
+                foreach (var msr in part.Measures) {
+                    measureSize = msr.Size;
+
+                    foreach (var note in msr.Elements) {
+                        if (note.IsRest() || note.IsChord()) { // Ignora pausas e notas de acorde
+                            continue;
+                        }
+
+                        Scale role = note.Note.Role;
+                        if (role == createPlatform) {
+                            if (platform) {
+                                sectionStart += sectionWidth; // Atualiza ponto de origem para nova plataforma
+                                sectionWidth = 2 * MEASURE_SIZE * note.Position / measureSize;
+
+                                for (int ii = sectionStart; ii < sectionStart + sectionWidth; ii++) {
+                                    _geography.Add(height);
+                                }
+                            }
+
+                        } else if (role == raiseHeight) {
+                            if (platform && sectionWidth > 0) {
+                                if (heightModifier) {
+                                    int newHeight = height + MEASURE_SIZE * note.Duration / measureSize / 2; // resultado da elevação
+
+                                    for (int x = sectionStart + 1; x < sectionStart + sectionWidth; x++) { // Atualização de alturas
+                                        _geography[x] += (newHeight - height) * (x - sectionStart) / sectionWidth;
+                                    }
+
+                                    height = newHeight; // Atualiza nova altura;
+                                    heightModifier = false; // Bloqueia novas alterações;
+                                } else {
+                                    // CTR+V : Linhas 126 a 131 (transformar em função na próxima refatoração do código)
+                                    sectionStart += sectionWidth; // Atualiza ponto de origem para nova plataforma
+                                    sectionWidth = MEASURE_SIZE * note.Position / measureSize;
+
+                                    for (int ii = sectionStart; ii < sectionStart + sectionWidth; ii++) {
+                                        _geography.Add(height);
+                                    }
+
+                                    heightModifier = true; // Libera alterações para a seção recém criada
+                                }
+                            }
+
+                        } else if (role == lowerHeight) {
+                            // CTRL+V : Linhas 136 a 156
+                            if (platform && sectionWidth > 0) {
+                                if (heightModifier) {
+                                    int newHeight = height - MEASURE_SIZE * note.Duration / measureSize / 2; // resultado da depressão
+
+                                    for (int x = sectionStart + 1; x < sectionStart + sectionWidth; x++) { // Atualização de alturas
+                                        _geography[x] -= (height - newHeight) * (x - sectionStart) / sectionWidth;
+                                    }
+
+                                    height = newHeight; // Atualiza nova altura;
+                                    heightModifier = false; // Bloqueia novas alterações;
+                                } else {
+                                    // CTRL+V : Linhas 126 a 131 (transformar em função na próxima refatoração do código)
+                                    sectionStart += sectionWidth; // Atualiza ponto de origem para nova plataforma
+                                    sectionWidth = MEASURE_SIZE * note.Position / measureSize;
+
+                                    for (int ii = sectionStart; ii < sectionStart + sectionWidth; ii++) {
+                                        _geography.Add(height);
+                                    }
+
+                                    heightModifier = true; // Libera alterações para a seção recém criada
+                                }
+                            }
+
+
+                        }
+                    }
+                }
+
+                // Outras informações
+                _width = _geography.Count;
+                _height = _geography.Max() + CEILING_HEIGHT;
+
+                Console.WriteLine("Mapa gerado");
+                Console.WriteLine("   w: {0} , h: {1}", _width, _height);
+                foreach (var num in _geography) {
+                    Console.WriteLine("       {0}", num);
+                }
+                Console.WriteLine();
+            }   
+        }
+
+        public List<Scale> orderRoles(Part part) {
+            List<Scale> roles = new List<Scale>();
+            List<int> roleCount = new List<int>();
+
+            roleCount.Add(part.CountRole(Scale.Tonic));
+            roleCount.Add(part.CountRole(Scale.Supertonic));
+            roleCount.Add(part.CountRole(Scale.Mediant));
+            roleCount.Add(part.CountRole(Scale.Subdominant));
+            roleCount.Add(part.CountRole(Scale.Dominant));
+            roleCount.Add(part.CountRole(Scale.Submediant));
+            roleCount.Add(part.CountRole(Scale.Subtonic));
+
+            int max;
+            int maxID;
+            for (int ii = 0; ii < 7; ii++) {
+                max = roleCount.Max();
+                if (max == 0) { // Identifica instrumento de percursão (tambores ou baterias)
+                    return roles;
+                }
+                maxID = roleCount.FindIndex(a => a == max);
+                roleCount[maxID] = -1;
+                roles.Add(Note.IntToRole(maxID));
+            }
+
+            return roles;
         }
 
         public void HSGeography(Score music) {
@@ -639,7 +785,7 @@ namespace LevelClasses {
             }
         }
 
-    //internal void DrawAbyss(Bitmap img, Abyss abyss) {
+        //internal void DrawAbyss(Bitmap img, Abyss abyss) {
     //    Rectangle grid = new Rectangle(0, 0, GRID_SIZE, GRID_SIZE);
     //    using (Graphics g = Graphics.FromImage(img)) {
     //        for (int xx = 0; xx < abyss.Width; xx++) {
@@ -654,7 +800,7 @@ namespace LevelClasses {
     //    }
     //}
 
-    internal void DrawSection(Bitmap img, int sectionNumber, int sectionHeight) {
+        internal void DrawSection(Bitmap img, int sectionNumber, int sectionHeight) {
             Rectangle grid = new Rectangle(0, 0, GRID_SIZE, GRID_SIZE);
             using (Graphics g = Graphics.FromImage(img)) {
                 for (int xx = 0; xx < MEASURE_SIZE; xx++) {
