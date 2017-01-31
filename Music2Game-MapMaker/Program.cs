@@ -22,7 +22,7 @@ namespace Music2Game_MapMaker {
         private static int DELTA_THRESHOLD = int.MaxValue;
         private static int MEASURE_FRACTION = 3; // Tamanho mínima de nota geradora de abismos (fração do tamanho do compasso)
         private static int MINIMUN_HEIGHT = 3; // Alutra mínima paa plataformas flutuantes
-        private static string VERSION = "0.7.0";
+        private static string VERSION = "0.7.1";
 
         static void Main(string[] args) {
             //Variáveis
@@ -109,10 +109,12 @@ namespace Music2Game_MapMaker {
                                 musicScore = ScoreBuilder.FromXML(musicPath + "\\tempMusic.xml");
                                 map = new Level();
 
-                                //map.BuildHeightsSequence(musicScore);
-                                //map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
-                                //map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
-                                //Console.Write(" >> Imagem criada");
+                                map.BuildHeightsSequence(musicScore);
+                                Console.Write(" -- w: {0}  h: {1}", map.Width, map.Height);
+                                map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
+                                Console.Write(" >> Imagem criada");
+                                map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
+                                Console.Write("  >> lvl Criado");
 
                                 map.BuildSingleLoop(musicScore);
 
@@ -127,6 +129,9 @@ namespace Music2Game_MapMaker {
                 }
 
             }
+
+            Console.WriteLine("Operação concluída");
+            Console.ReadKey();
             //System.IO.DirectoryInfo musicDir = new System.IO.DirectoryInfo(musicPath);
 
 

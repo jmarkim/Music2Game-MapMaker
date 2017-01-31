@@ -68,7 +68,7 @@ namespace LevelClasses {
         // Construtor a partir de uma música
         public void BuildHeightsSequence(Score music) {
             _width = MEASURE_SIZE * music.MeasureCount;
-            _geography = new List<int>(music.MeasureCount);
+            _geography = new List<int>(_width);
             _challenges = new List<Challenge>();
             _abysses = new List<Abyss>();
             HSGeography(music);
@@ -190,11 +190,11 @@ namespace LevelClasses {
                 _width = _geography.Count;
                 _height = _geography.Max() + CEILING_HEIGHT;
 
-                Console.WriteLine("Mapa gerado");
-                Console.WriteLine("   w: {0} , h: {1}", _width, _height);
-                foreach (var num in _geography) {
-                    Console.WriteLine("       {0}", num);
-                }
+                Console.WriteLine("Mapa {0} gerado", validMaps++);
+                //Console.WriteLine("   w: {0} , h: {1}", _width, _height);
+                //foreach (var num in _geography) {
+                //    Console.WriteLine("       {0}", num);
+                //}
                 Console.WriteLine();
             }   
         }
@@ -340,6 +340,9 @@ namespace LevelClasses {
                 }
 
                 _geography.Add(sum / partCount);
+                for (int xx = 1; xx < MEASURE_SIZE; xx++) { // Gera toda a regão correspondente ao compasso
+                    _geography.Add(0);
+                }
             }
 
             _geography[0] = STARTING_HEIGHT + _geography[0];
@@ -675,7 +678,7 @@ namespace LevelClasses {
                 if (src.Position >= nextValidPosition) {
                     width = MEASURE_SIZE * src.Duration / measureSize / 2;
                     position = MEASURE_SIZE * src.Position / measureSize;
-                    offset = SCREEN_SIZE + measureNumber * MEASURE_SIZE + position + intensity % (width + 1);
+                    offset = /*SCREEN_SIZE +*/ measureNumber * MEASURE_SIZE + position + intensity % (width + 1);
                     if (offset >= _width) {
                         continue;
                     }
@@ -688,7 +691,12 @@ namespace LevelClasses {
                     if (position + width > MEASURE_SIZE) {
                         width = MEASURE_SIZE - position;
                     }
-                    _abysses.Add(new Abyss(offset, _geography[measureNumber], width));
+
+                    for (int xx = offset; xx < offset + width; xx++) {
+                        _geography[xx] = 0;
+                    }
+
+                    //_abysses.Add(new Abyss(offset, _geography[measureNumber], width));
 
                 }
             }
@@ -803,8 +811,8 @@ namespace LevelClasses {
         internal void DrawSection(Bitmap img, int sectionNumber, int sectionHeight) {
             Rectangle grid = new Rectangle(0, 0, GRID_SIZE, GRID_SIZE);
             using (Graphics g = Graphics.FromImage(img)) {
-                for (int xx = 0; xx < MEASURE_SIZE; xx++) {
-                    grid.X = (SCREEN_SIZE + sectionNumber * MEASURE_SIZE + xx) * GRID_SIZE;
+                
+                    grid.X = (SCREEN_SIZE + sectionNumber) * GRID_SIZE;
 
                     for (int yy = 0; yy < sectionHeight; yy++) {
                         grid.Y = img.Height - yy * GRID_SIZE;
@@ -814,7 +822,7 @@ namespace LevelClasses {
 
                     grid.Y = img.Height - sectionHeight * GRID_SIZE;
                     g.FillRectangle(PLATFORM_SURFACE, grid);
-                }
+                
             }
         }
 
