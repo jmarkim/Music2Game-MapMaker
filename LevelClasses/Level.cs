@@ -190,9 +190,9 @@ namespace LevelClasses {
                         } else if (role == obstacle) {
                             if (platform && sectionWidth > 0) {
                                 int width = MEASURE_SIZE * note.Duration / measureSize;
-                                int obstacleHeight = MEASURE_SIZE * note.Position / measureSize + note.Note.Tone;
+                                int obstacleHeight = MEASURE_SIZE * note.Position / measureSize / 2 + note.Note.Tone;
                                 int offset = Math.Min(sectionWidth * note.Position / measureSize, sectionWidth - 1);
-                                if (width > 3) { // Geração de abismo
+                                if (width > 2) { // Geração de abismo
                                     for (int xx = sectionStart + offset; xx < sectionStart + sectionWidth; xx++) {
                                         if (_geography[xx] == 0) {
                                             _geography[xx] = height;
@@ -201,7 +201,10 @@ namespace LevelClasses {
                                         }
                                     }
                                 } else { // Geração de obstáculo
-                                    _challenges.Add(new Obstacle(sectionStart + offset + SCREEN_SIZE, _geography[sectionStart + offset], width, obstacleHeight));
+                                    if (_geography[sectionStart + offset] > 0) {
+                                        _challenges.Add(new Obstacle(sectionStart + offset + SCREEN_SIZE, _geography[sectionStart + offset], width, obstacleHeight));
+                                        heightModifier = false;
+                                    }
                                 }
                             }
                         }
