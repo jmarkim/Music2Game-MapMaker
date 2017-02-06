@@ -19,6 +19,8 @@ namespace LevelClasses {
         internal static int HEIGHT_MODIFIER = 5; // Valor pelo qual "delta" é multiplicado antes de dividido pelo tamanho do compasso
         internal static int MAXIMUM_WIDTH = 16; // Largura máxima (soma) de abismos em uma seção
         internal static int MINIMUM_WIDTH = 4; // Largura mínima (soma) de abismos em um seção
+        internal static int MAXIMUM_HEIGHT = 60;
+        internal static int MINIMUM_HEIGHT = 2;
         internal static int ABYSS_THRESHOLD = 8; // Largura mínima de uma abismo para que seja coberto por blocos que caem
         internal static double ABYSS_CHANCE = 0.3; // Define o limiar de intensidade para geração de abismos
 
@@ -76,7 +78,7 @@ namespace LevelClasses {
             _height = _geography.Max() + CEILING_HEIGHT;
         }
 
-        public void BuildSingleLoop(Score music) {
+        public void BuildSingleLoop(Score music, string path) {
             List<Scale> orderedScale;
             int validMaps = 0;
 
@@ -95,15 +97,17 @@ namespace LevelClasses {
                 Scale createPlatform = orderedScale[0];
                 Scale raiseHeight = orderedScale[3];
                 Scale lowerHeight = orderedScale[4];
+                Scale toogle = orderedScale[6];
+                Scale obstacle = orderedScale[1];
 
                 Console.WriteLine();
                 Console.WriteLine("1ª Cria plataforma : {0}", orderedScale[0]);
-                Console.WriteLine("2ª : {0}", orderedScale[1]);
+                Console.WriteLine("2ª Obstáculo : {0}", orderedScale[1]);
                 Console.WriteLine("3ª : {0}", orderedScale[2]);
                 Console.WriteLine("4ª Elevação : {0}", orderedScale[3]);
                 Console.WriteLine("5ª Depressão : {0}", orderedScale[4]);
                 Console.WriteLine("6ª : {0}", orderedScale[5]);
-                Console.WriteLine("7ª : {0}", orderedScale[6]);
+                Console.WriteLine("7ª Liga/Desliga plataforma: {0}", orderedScale[6]);
 
                 // Construção
                 int sectionStart = 0; // Início da última seção gerada
@@ -122,7 +126,9 @@ namespace LevelClasses {
                         }
 
                         Scale role = note.Note.Role;
-                        if (role == createPlatform) {
+                        /*if (role == toogle) {
+                            platform = !platform;
+                        } else*/ if (role == createPlatform) {
                             if (platform) {
                                 sectionStart += sectionWidth; // Atualiza ponto de origem para nova plataforma
                                 sectionWidth = 2 * MEASURE_SIZE * note.Position / measureSize;
@@ -135,7 +141,7 @@ namespace LevelClasses {
                         } else if (role == raiseHeight) {
                             if (platform && sectionWidth > 0) {
                                 if (heightModifier) {
-                                    int newHeight = height + MEASURE_SIZE * note.Duration / measureSize / 2; // resultado da elevação
+                                    int newHeight = Math.Min(height + MEASURE_SIZE * note.Duration / measureSize / 2, MAXIMUM_HEIGHT); // resultado da elevação
 
                                     for (int x = sectionStart + 1; x < sectionStart + sectionWidth; x++) { // Atualização de alturas
                                         _geography[x] += (newHeight - height) * (x - sectionStart) / sectionWidth;
@@ -160,7 +166,7 @@ namespace LevelClasses {
                             // CTRL+V : Linhas 136 a 156
                             if (platform && sectionWidth > 0) {
                                 if (heightModifier) {
-                                    int newHeight = height - MEASURE_SIZE * note.Duration / measureSize / 2; // resultado da depressão
+                                    int newHeight = Math.Max(height - MEASURE_SIZE * note.Duration / measureSize / 2, MINIMUM_HEIGHT); // resultado da depressão
 
                                     for (int x = sectionStart + 1; x < sectionStart + sectionWidth; x++) { // Atualização de alturas
                                         _geography[x] -= (height - newHeight) * (x - sectionStart) / sectionWidth;
@@ -181,8 +187,25 @@ namespace LevelClasses {
                                 }
                             }
 
-
+                        } else if (role == obstacle) {
+                            if (platform && sectionWidth > 0) {
+                                int width = MEASURE_SIZE * note.Duration / measureSize;
+                                int obstacleHeight = MEASURE_SIZE * note.Position / measureSize + note.Note.Tone;
+                                int offset = Math.Min(sectionWidth * note.Position / measureSize, sectionWidth - 1);
+                                if (width > 3) { // Geração de abismo
+                                    for (int xx = sectionStart + offset; xx < sectionStart + sectionWidth; xx++) {
+                                        if (_geography[xx] == 0) {
+                                            _geography[xx] = height;
+                                        } else {
+                                            _geography[xx] = 0;
+                                        }
+                                    }
+                                } else { // Geração de obstáculo
+                                    _challenges.Add(new Obstacle(sectionStart + offset + SCREEN_SIZE, _geography[sectionStart + offset], width, obstacleHeight));
+                                }
+                            }
                         }
+
                     }
                 }
 
@@ -190,7 +213,9 @@ namespace LevelClasses {
                 _width = _geography.Count;
                 _height = _geography.Max() + CEILING_HEIGHT;
 
-                Console.WriteLine("Mapa {0} gerado", validMaps++);
+                Console.WriteLine("Mapa {0} gerado", validMaps + 1);
+                SaveImage(path + '[' /*+ ( char )('a' + validMaps / 26)*/ + ( char )('a' + validMaps % 26) + ']');
+                validMaps++;
                 //Console.WriteLine("   w: {0} , h: {1}", _width, _height);
                 //foreach (var num in _geography) {
                 //    Console.WriteLine("       {0}", num);
@@ -485,7 +510,7 @@ namespace LevelClasses {
             int averagePosition = 0;
             int totalDuration = 0;
             int offset = 0;
-            int measureMark = SCREEN_SIZE + measureNumber * MEASURE_SIZE;
+            int measureMark = measureNumber * MEASURE_SIZE;
             int position;
             bool abyss;
             int kind;
@@ -515,7 +540,7 @@ namespace LevelClasses {
                             }
                         }
                         if (!abyss) {
-                            _challenges.Add(new PassiveEnemy(measureMark + position, _geography[measureNumber] + 1, kind, false));
+                            _challenges.Add(new PassiveEnemy(SCREEN_SIZE + measureMark + position, _geography[measureMark + position] + 1, kind, false));
                         }
                     }
 
@@ -582,7 +607,7 @@ namespace LevelClasses {
             int averagePosition = 0;
             int totalDuration = 0;
             int offset = 0;
-            int measureMark = SCREEN_SIZE + measureNumber * MEASURE_SIZE;
+            int measureMark = measureNumber * MEASURE_SIZE;
             int position;
             bool abyss;
             int kind;
@@ -612,7 +637,7 @@ namespace LevelClasses {
                             }
                         }
                         if (!abyss) {
-                            _challenges.Add(new ActiveEnemy(measureMark + position, _geography[measureNumber] + 1, kind, false));
+                            _challenges.Add(new ActiveEnemy(SCREEN_SIZE + measureMark + position, _geography[measureMark + position] + 1, kind, false));
                         }
                     }
 
@@ -768,7 +793,12 @@ namespace LevelClasses {
 
                 DrawMeasureBounds(img);
                 DrawScreenBounds(img);
-                img.Save(name + ".png", ImageFormat.Png);
+                try {
+                    img.Save(name + ".png", ImageFormat.Png);
+                } catch (Exception er) {
+                    Console.WriteLine("Não foi possível construir a imagem ({0})", er.Message);
+                }
+                
 
             }
         }

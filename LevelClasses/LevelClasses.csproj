@@ -49,6 +49,7 @@
     <Compile Include="Challenge.cs" />
     <Compile Include="FallingBlock.cs" />
     <Compile Include="Level.cs" />
+    <Compile Include="Obstacle.cs" />
     <Compile Include="PassiveEnemy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
