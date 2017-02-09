@@ -48,7 +48,9 @@
     <Compile Include="ActiveEnemy.cs" />
     <Compile Include="Challenge.cs" />
     <Compile Include="FallingBlock.cs" />
+    <Compile Include="FloatPlatform.cs" />
     <Compile Include="Level.cs" />
+    <Compile Include="MovingPlatform.cs" />
     <Compile Include="Obstacle.cs" />
     <Compile Include="PassiveEnemy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
