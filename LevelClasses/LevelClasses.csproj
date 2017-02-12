@@ -53,6 +53,7 @@
     <Compile Include="MovingPlatform.cs" />
     <Compile Include="Obstacle.cs" />
     <Compile Include="PassiveEnemy.cs" />
+    <Compile Include="PowerUp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

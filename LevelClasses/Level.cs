@@ -84,6 +84,7 @@ namespace LevelClasses {
         internal class Builder {
             public int abyssCount;
             public int enemyCount;
+            public int powerupCount;
             public int height;
             public int lastSectionStart;
             public int lastSectionWidth;
@@ -97,6 +98,7 @@ namespace LevelClasses {
                 height = STARTING_HEIGHT;
                 abyssCount = 0;
                 enemyCount = 0;
+                powerupCount = 0;
                 lastSectionStart = 0;
                 lastSectionWidth = 0;
                 nextObstaclePosition = 0;
@@ -118,6 +120,7 @@ namespace LevelClasses {
                 height = STARTING_HEIGHT;
                 abyssCount = 0;
                 enemyCount = 0;
+                powerupCount = 0;
                 lastSectionStart = 0;
                 lastSectionWidth = 0;
                 nextObstaclePosition = 0;
@@ -270,7 +273,7 @@ namespace LevelClasses {
                 lastSectionHeightIsMdodifiable = false;
 
                 if (enemyCount % 3 == 0) {
-                    level.Challenges.Add(new ActiveEnemy(SCREEN_SIZE + lastSectionStart + x, level.Geography[lastSectionStart + x] + 1, strength % 9, false));
+                    level.Challenges.Add(new ActiveEnemy(SCREEN_SIZE + lastSectionStart + x, level.Geography[lastSectionStart + x] + 1, strength % 10, false));
                 }
                 enemyCount++;
             }
@@ -282,9 +285,20 @@ namespace LevelClasses {
                 int y = Math.Max(height, level.Geography[lastSectionStart + x]);
 
                 if (enemyCount % 3 == 0) {
-                    level.Challenges.Add(new PassiveEnemy(SCREEN_SIZE + lastSectionStart + x, y + altitude, strength % 9, true));
+                    level.Challenges.Add(new PassiveEnemy(SCREEN_SIZE + lastSectionStart + x, y + altitude, strength % 10, true));
                 }
                 enemyCount++;
+            }
+
+            public void CreatePowerUp(Level level, int offset, int size, int strength) {
+                int x = Math.Min(lastSectionWidth * offset / size, level.Geography.Count - 1);
+                lastSectionHeightIsMdodifiable = false;
+
+                if (powerupCount % 5 == 0) {
+                    level.Challenges.Add(new PowerUp(SCREEN_SIZE + lastSectionStart + x, Math.Max(height, level.Geography[lastSectionStart + x]) + 4, strength % 10));
+                }
+
+                powerupCount++;
             }
         }
 
@@ -302,48 +316,36 @@ namespace LevelClasses {
                 size = msr.Size;
 
                 foreach (var note in msr.Elements) {
-                    if (note.IsRest() || note.IsChord()) { // Ignora pausas e notas de acorde
+                    if (note.IsChord()) { // Ignora pausas e notas de acorde
                         continue;
                     }
 
-                    Scale role = note.Note.Role;
-                    if (role == toogle) {
-                        Builder.Instance.ToogleAbyss();
-                    } else if (role == createPlatform) {
-                        if (Builder.Instance.abyssFlag) {
-                            // Gera plataforma flutuante fixa
-                            int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
-                            int offset = MEASURE_SIZE * note.Position / size;
-                            int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
-                            int rmargim = Math.Max(1, Math.Min( 4, Math.Abs(note.Note.Tone)));
-                            Builder.Instance.CreateFloatingPlatform(this, width, lmargin, rmargim, false);
-                        } else {
-                            // Gera plataforma sólida
-                            int width = Math.Max(1, DURATION_TO_WIDTH_FACTOR * MEASURE_SIZE * note.Duration / size);
-                            Builder.Instance.CreateSection(this, width);
+                    if (note.IsRest()) {
+                        if (Builder.Instance.firstSectionBuilt || _challenges.Count > 0) {
+                            Builder.Instance.CreatePowerUp(this, note.Position, size, note.Duration);
                         }
 
-                    } else if (role == raiseHeight) {
-                        if (Builder.Instance.abyssFlag) {
-                            // Gera plataforma móvel vertical (subindo)
-                            int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
-                            int offset = MEASURE_SIZE * note.Position / size;
-                            int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
-                            int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
-                            int range = Math.Max(5 * Math.Abs(note.Note.Tone) + 5 - width / 2, 5);
-                            Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, true, true);
-                        } else {
-                            if (Builder.Instance.firstSectionBuilt) {
-                                if (Builder.Instance.lastSectionHeightIsMdodifiable) {
-                                    // Modifica altura
-                                    int delta = MEASURE_SIZE * note.Duration / size;
-                                    Builder.Instance.ModifySection(this, delta);
-                                } else {
-                                    // Gera plataforma sólida
-                                    int width = Math.Max(1, DURATION_TO_WIDTH_FACTOR * MEASURE_SIZE * note.Duration / size);
-                                    Builder.Instance.CreateSection(this, width);
-                                }
+                    } else {
+
+                        Scale role = note.Note.Role;
+                        if (role == toogle) {
+                            Builder.Instance.ToogleAbyss();
+                        } else if (role == createPlatform) {
+                            if (Builder.Instance.abyssFlag) {
+                                // Gera plataforma flutuante fixa
+                                int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
+                                int offset = MEASURE_SIZE * note.Position / size;
+                                int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
+                                int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
+                                Builder.Instance.CreateFloatingPlatform(this, width, lmargin, rmargim, false);
                             } else {
+                                // Gera plataforma sólida
+                                int width = Math.Max(1, DURATION_TO_WIDTH_FACTOR * MEASURE_SIZE * note.Duration / size);
+                                Builder.Instance.CreateSection(this, width);
+                            }
+
+                        } else if (role == raiseHeight) {
+                            if (Builder.Instance.abyssFlag) {
                                 // Gera plataforma móvel vertical (subindo)
                                 int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
                                 int offset = MEASURE_SIZE * note.Position / size;
@@ -351,30 +353,30 @@ namespace LevelClasses {
                                 int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
                                 int range = Math.Max(5 * Math.Abs(note.Note.Tone) + 5 - width / 2, 5);
                                 Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, true, true);
-                            }
-                        }
-
-                    } else if (role == lowerHeight) {
-                        if (Builder.Instance.abyssFlag) {
-                            // Gera plataforma móvel vertical (descendo)
-                            int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
-                            int offset = MEASURE_SIZE * note.Position / size;
-                            int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
-                            int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
-                            int range = Math.Max(3 * Math.Abs(note.Note.Tone) + 3 - width / 2, 3);
-                            Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, true, false);
-                        } else {
-                            if (Builder.Instance.firstSectionBuilt) {
-                                if (Builder.Instance.lastSectionHeightIsMdodifiable) {
-                                    // Modifica altura
-                                    int delta = MEASURE_SIZE * note.Duration / size;
-                                    Builder.Instance.ModifySection(this, -delta);
-                                } else {
-                                    // Gera plataforma sólida
-                                    int width = Math.Max(1, DURATION_TO_WIDTH_FACTOR * MEASURE_SIZE * note.Duration / size);
-                                    Builder.Instance.CreateSection(this, width);
-                                }
                             } else {
+                                if (Builder.Instance.firstSectionBuilt) {
+                                    if (Builder.Instance.lastSectionHeightIsMdodifiable) {
+                                        // Modifica altura
+                                        int delta = MEASURE_SIZE * note.Duration / size;
+                                        Builder.Instance.ModifySection(this, delta);
+                                    } else {
+                                        // Gera plataforma sólida
+                                        int width = Math.Max(1, DURATION_TO_WIDTH_FACTOR * MEASURE_SIZE * note.Duration / size);
+                                        Builder.Instance.CreateSection(this, width);
+                                    }
+                                } else {
+                                    // Gera plataforma móvel vertical (subindo)
+                                    int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
+                                    int offset = MEASURE_SIZE * note.Position / size;
+                                    int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
+                                    int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
+                                    int range = Math.Max(5 * Math.Abs(note.Note.Tone) + 5 - width / 2, 5);
+                                    Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, true, true);
+                                }
+                            }
+
+                        } else if (role == lowerHeight) {
+                            if (Builder.Instance.abyssFlag) {
                                 // Gera plataforma móvel vertical (descendo)
                                 int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
                                 int offset = MEASURE_SIZE * note.Position / size;
@@ -382,53 +384,60 @@ namespace LevelClasses {
                                 int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
                                 int range = Math.Max(3 * Math.Abs(note.Note.Tone) + 3 - width / 2, 3);
                                 Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, true, false);
-                            }
-                        }
-
-                    } else if (role == obstacle) {
-                        if (Builder.Instance.abyssFlag) {
-                            // Gera plataforma flutuante frágil
-                            int width = Math.Max(1, MEASURE_SIZE * note.Duration / size / DURATION_TO_WIDTH_FACTOR);
-                            int offset = MEASURE_SIZE * note.Position / size;
-                            int lmargin = Math.Max(0, Math.Min(4, offset / 2 + note.Note.Tone));
-                            int rmargim = Math.Max(0, Math.Min(4, Math.Abs(note.Note.Tone)));
-                            Builder.Instance.CreateFloatingPlatform(this, width, lmargin, rmargim, true);
-                        } else {
-                            if (Builder.Instance.firstSectionBuilt) {
-                                if (Builder.Instance.lastSectionHeightIsMdodifiable) {
-                                    // plataforma plana -> obstáculo
-                                    int width = MEASURE_SIZE * note.Duration / size;
-                                    int height = MEASURE_SIZE * note.Duration / size / DURATION_TO_HEIGHT_FACTOR;
-                                    Builder.Instance.CreateObstacle(this, note.Position, size, width, height);
-                                } else {
-                                    // plataforma inclinada -> abismo
-                                    int width = MEASURE_SIZE * note.Duration / size;
-                                    Builder.Instance.CreateAbyss(this, note.Position, size, width);
-                                }
                             } else {
+                                if (Builder.Instance.firstSectionBuilt) {
+                                    if (Builder.Instance.lastSectionHeightIsMdodifiable) {
+                                        // Modifica altura
+                                        int delta = MEASURE_SIZE * note.Duration / size;
+                                        Builder.Instance.ModifySection(this, -delta);
+                                    } else {
+                                        // Gera plataforma sólida
+                                        int width = Math.Max(1, DURATION_TO_WIDTH_FACTOR * MEASURE_SIZE * note.Duration / size);
+                                        Builder.Instance.CreateSection(this, width);
+                                    }
+                                } else {
+                                    // Gera plataforma móvel vertical (descendo)
+                                    int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
+                                    int offset = MEASURE_SIZE * note.Position / size;
+                                    int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
+                                    int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
+                                    int range = Math.Max(3 * Math.Abs(note.Note.Tone) + 3 - width / 2, 3);
+                                    Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, true, false);
+                                }
+                            }
+
+                        } else if (role == obstacle) {
+                            if (Builder.Instance.abyssFlag) {
                                 // Gera plataforma flutuante frágil
                                 int width = Math.Max(1, MEASURE_SIZE * note.Duration / size / DURATION_TO_WIDTH_FACTOR);
                                 int offset = MEASURE_SIZE * note.Position / size;
                                 int lmargin = Math.Max(0, Math.Min(4, offset / 2 + note.Note.Tone));
                                 int rmargim = Math.Max(0, Math.Min(4, Math.Abs(note.Note.Tone)));
                                 Builder.Instance.CreateFloatingPlatform(this, width, lmargin, rmargim, true);
-                            }
-                        }
-
-                    } else if (role == ground) {
-                        if (Builder.Instance.abyssFlag) {
-                            // Gera plataforma móvel horizontal
-                            int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
-                            int offset = MEASURE_SIZE * note.Position / size;
-                            int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
-                            int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
-                            int range = Math.Max(5 * Math.Abs(note.Note.Tone) + 5 - width / 2, 3);
-                            Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, false, false);
-                        } else {
-                            if (Builder.Instance.firstSectionBuilt) {
-                                // Gera inimigo terrestre
-                                Builder.Instance.CreateGroundedEnemy(this, note.Position, size, note.Duration);
                             } else {
+                                if (Builder.Instance.firstSectionBuilt) {
+                                    if (Builder.Instance.lastSectionHeightIsMdodifiable) {
+                                        // plataforma plana -> obstáculo
+                                        int width = MEASURE_SIZE * note.Duration / size;
+                                        int height = MEASURE_SIZE * note.Duration / size / DURATION_TO_HEIGHT_FACTOR;
+                                        Builder.Instance.CreateObstacle(this, note.Position, size, width, height);
+                                    } else {
+                                        // plataforma inclinada -> abismo
+                                        int width = MEASURE_SIZE * note.Duration / size;
+                                        Builder.Instance.CreateAbyss(this, note.Position, size, width);
+                                    }
+                                } else {
+                                    // Gera plataforma flutuante frágil
+                                    int width = Math.Max(1, MEASURE_SIZE * note.Duration / size / DURATION_TO_WIDTH_FACTOR);
+                                    int offset = MEASURE_SIZE * note.Position / size;
+                                    int lmargin = Math.Max(0, Math.Min(4, offset / 2 + note.Note.Tone));
+                                    int rmargim = Math.Max(0, Math.Min(4, Math.Abs(note.Note.Tone)));
+                                    Builder.Instance.CreateFloatingPlatform(this, width, lmargin, rmargim, true);
+                                }
+                            }
+
+                        } else if (role == ground) {
+                            if (Builder.Instance.abyssFlag) {
                                 // Gera plataforma móvel horizontal
                                 int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
                                 int offset = MEASURE_SIZE * note.Position / size;
@@ -436,21 +445,34 @@ namespace LevelClasses {
                                 int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
                                 int range = Math.Max(5 * Math.Abs(note.Note.Tone) + 5 - width / 2, 3);
                                 Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, false, false);
+                            } else {
+                                if (Builder.Instance.firstSectionBuilt) {
+                                    // Gera inimigo terrestre
+                                    Builder.Instance.CreateGroundedEnemy(this, note.Position, size, note.Duration);
+                                } else {
+                                    // Gera plataforma móvel horizontal
+                                    int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
+                                    int offset = MEASURE_SIZE * note.Position / size;
+                                    int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));
+                                    int rmargim = Math.Max(1, Math.Min(4, Math.Abs(note.Note.Tone)));
+                                    int range = Math.Max(5 * Math.Abs(note.Note.Tone) + 5 - width / 2, 3);
+                                    Builder.Instance.CreateMovingPlatform(this, width, range, lmargin, rmargim, false, false);
+                                }
                             }
-                        }
 
-                    } else if (role == aerial) {
-                        if (Builder.Instance.firstSectionBuilt || _challenges.Count > 0) {
-                            // Gera inimigo voador
-                            int altitude = Math.Min(3 + 2 * Math.Abs(note.Note.Tone) + 2, 10);
-                            Builder.Instance.CreateFlierEnemy(this, note.Position, altitude, size, note.Duration);
+                        } else if (role == aerial) {
+                            if (Builder.Instance.firstSectionBuilt || _challenges.Count > 0) {
+                                // Gera inimigo voador
+                                int altitude = Math.Min(3 + 2 * Math.Abs(note.Note.Tone) + 2, 10);
+                                Builder.Instance.CreateFlierEnemy(this, note.Position, altitude, size, note.Duration);
+                            }
                         }
                     }
                 }
             }
         }
 
-        public void BuildSingleLoop(Score music, string path) {
+        public void BuildSingleLoop(Score music, string rootPath, string name, string ver) {
             List<Scale> orderedScale;
             int validMaps = 0;
 
@@ -496,7 +518,8 @@ namespace LevelClasses {
                 _height = _geography.Max() + CEILING_HEIGHT;
 
                 Console.WriteLine("Mapa {0} gerado", validMaps + 1);
-                SaveImage(path + '[' /*+ ( char )('a' + validMaps / 26)*/ + ( char )('a' + validMaps % 26) + ']');
+                SaveImage(rootPath +"Imagens\\" +  ver + "\\" + name + '[' + ( char )('a' + validMaps / 26) + ( char )('a' + validMaps % 26) + ']');
+                SaveText(rootPath + "Niveis\\" + ver + "\\",  name + '[' + ( char )('a' + validMaps / 26) + ( char )('a' + validMaps % 26) + ']');
                 validMaps++;
                 //Console.WriteLine("   w: {0} , h: {1}", _width, _height);
                 //foreach (var num in _geography) {

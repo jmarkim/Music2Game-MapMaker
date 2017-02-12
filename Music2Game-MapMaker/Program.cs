@@ -14,12 +14,13 @@ namespace Music2Game_MapMaker {
     class Program {
 
         // Constantes
-        private static string VERSION = "fdg-1";
+        public static string VERSION = "fdg-2";
+        private const string FILE_MODE = "midi";
 
         static void Main(string[] args) {
             //Variáveis
             string root = AppDomain.CurrentDomain.BaseDirectory; // Diretório da aplicação
-            string musicPath = root + "Music"; // Diretório de músicas
+            string musicPath = root + "Music\\" + FILE_MODE; // Diretório de músicas
             string[] files; // Arquivos no diretório de músicas
             string musicName;
             bool isMusicXML;
@@ -67,54 +68,73 @@ namespace Music2Game_MapMaker {
             foreach (var music in files) {
                 musicFile = new System.IO.FileInfo(music);
 
-                // Checa se arquivo é musicXML
-                if (musicFile.Extension == ".mxl") {
-                    musicName = musicFile.Name.Remove(musicFile.Name.Length - 4);
-                    Console.Write("   -> {0} ", musicName);
+                if (FILE_MODE == "midi") {
+                    // Modo midi
 
-                    // musicXML é um arquivo compactado sob o padrão zip, iterar sobre os arquivos internos em busca do xml com a partitura
-                    foreach (var entry in ZipFile.OpenRead(musicFile.FullName).Entries) {
-                        isMusicXML = false;
+                    if (musicFile.Extension == ".mid") {
+                        musicName = musicFile.Name.Remove(musicFile.Name.Length - 4);
+                        Console.Write("   -> {0} ", musicName);
+                        try {
+                            musicScore = ScoreBuilder.FromMIDI(musicFile.FullName);
+                            map = new Level();
+                            map.BuildSingleLoop(musicScore, root, musicName, VERSION);
 
-                        // Identifica arquivos xml
-                        if (entry.Name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) {
+                        } catch (Exception ex) { }
+                    }
 
-                            // Confirma se o arquivo xml realmente é um musicXML, o .mxl também contém outro xml (\META-INF\container.xml)
-                            reader = new StreamReader(entry.Open());
-                            reader.ReadLine();
-                            if (reader.ReadLine().Contains("score")) {
-                                isMusicXML = true;
-                            }
-                            reader.Close();
+                } else {
+                    // Modo musicXML
 
-                            // Checa e deleta tempMusic.xml para evitar conflitos
-                            if (File.Exists(musicPath + "\\tempMusic.xml")) {
-                                File.Delete(musicPath + "\\tempMusic.xml");
-                            }
+                    // Checa se arquivo é musicXML
+                    if (musicFile.Extension == ".mxl") {
+                        musicName = musicFile.Name.Remove(musicFile.Name.Length - 4);
+                        Console.Write("   -> {0} ", musicName);
 
-                            // Gera os arquivos de fase
-                            if (isMusicXML) {
-                                entry.ExtractToFile(musicPath + "\\tempMusic.xml");
-                                musicScore = ScoreBuilder.FromXML(musicPath + "\\tempMusic.xml");
-                                map = new Level();
+                        // musicXML é um arquivo compactado sob o padrão zip, iterar sobre os arquivos internos em busca do xml com a partitura
+                        foreach (var entry in ZipFile.OpenRead(musicFile.FullName).Entries) {
+                            isMusicXML = false;
 
-                                //map.BuildHeightsSequence(musicScore);
-                                //Console.Write(" -- w: {0}  h: {1}", map.Width, map.Height);
-                                //map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
-                                //Console.Write(" >> Imagem criada");
-                                //map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
-                                //Console.Write("  >> lvl Criado");
+                            // Identifica arquivos xml
+                            if (entry.Name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) {
 
-                                map.BuildSingleLoop(musicScore, root + "Imagens\\" + VERSION + "\\" + musicName);
+                                // Confirma se o arquivo xml realmente é um musicXML, o .mxl também contém outro xml (\META-INF\container.xml)
+                                reader = new StreamReader(entry.Open());
+                                reader.ReadLine();
+                                if (reader.ReadLine().Contains("score")) {
+                                    isMusicXML = true;
+                                }
+                                reader.Close();
 
-                                System.IO.File.Delete(musicPath + "\\tempMusic.xml");
+                                // Checa e deleta tempMusic.xml para evitar conflitos
+                                if (File.Exists(musicPath + "\\tempMusic.xml")) {
+                                    File.Delete(musicPath + "\\tempMusic.xml");
+                                }
+
+                                // Gera os arquivos de fase
+                                if (isMusicXML) {
+                                    entry.ExtractToFile(musicPath + "\\tempMusic.xml");
+                                    musicScore = ScoreBuilder.FromXML(musicPath + "\\tempMusic.xml");
+                                    map = new Level();
+
+                                    //map.BuildHeightsSequence(musicScore);
+                                    //Console.Write(" -- w: {0}  h: {1}", map.Width, map.Height);
+                                    //map.SaveImage(root + "Imagens\\" + VERSION + "\\" + musicName);
+                                    //Console.Write(" >> Imagem criada");
+                                    //map.SaveText(root + "Niveis\\" + VERSION + "\\", musicName);
+                                    //Console.Write("  >> lvl Criado");
+
+                                    map.BuildSingleLoop(musicScore, root, musicName, VERSION);
+
+                                    System.IO.File.Delete(musicPath + "\\tempMusic.xml");
+                                }
+
                             }
 
                         }
 
+                        Console.WriteLine();
                     }
 
-                    Console.WriteLine();
                 }
 
             }
