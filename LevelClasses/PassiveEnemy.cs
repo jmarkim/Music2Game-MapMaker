@@ -9,7 +9,7 @@ namespace LevelClasses {
     class PassiveEnemy : Challenge{
 
         internal static Brush PASSIVE_ENEMY_COLOR = Brushes.Crimson;
-        internal static Pen PASSIVE_ENEMY_FLY = Pens.Red;
+        internal static Pen PASSIVE_ENEMY_FLY = Pens.White;
 
         // Indica tipo do inimigo
         private int _kind;

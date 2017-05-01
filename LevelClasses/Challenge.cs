@@ -9,14 +9,14 @@ using System.Drawing.Imaging;
 namespace LevelClasses {
     public abstract class Challenge {
 
-        // Posição X do desafio
+        // Posição X(grid) do desafio
         private int x;
         public int PosX {
             get { return x; }
             set { x = value; }
         }
 
-        // Posição Y do desafio
+        // Posição Y(grid) do desafio
         private int y;
         public int PosY {
             get { return y; }
