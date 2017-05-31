@@ -64,6 +64,8 @@ namespace LevelClasses {
         //    get { return _abysses; }
         //}
 
+        private int _endHeight;
+
         // Lista e desafios da fase (inimigos, abismos, obstáculos, etc)
         private List<Challenge> _challenges;
         public List<Challenge> Challenges {
@@ -80,6 +82,15 @@ namespace LevelClasses {
         //    HSChallenges(music);
         //    _height = _geography.Max() + CEILING_HEIGHT;
         //}
+
+        public void Reset() {
+            _geography = new List<int>();
+            _challenges = new List<Challenge>();
+            _geography.Clear();
+            _challenges.Clear();
+            _endHeight = 0;
+            Builder.Instance.Reset();
+        }
 
         internal class Builder {
             public int abyssCount;
@@ -311,6 +322,8 @@ namespace LevelClasses {
             Scale ground = parts[2];
             Scale aerial = parts[5];
 
+            Reset();
+
             int size;
             foreach (var msr in instrument.Measures) {
                 size = msr.Size;
@@ -470,6 +483,11 @@ namespace LevelClasses {
                     }
                 }
             }
+
+            _width = _geography.Count;
+            _height = _geography.Max() + CEILING_HEIGHT;
+            _endHeight = Builder.Instance.height;
+
         }
 
         public void BuildSingleLoop(Score music, string rootPath, string name, string ver) {
@@ -477,9 +495,7 @@ namespace LevelClasses {
             int validMaps = 0;
 
             foreach (var part in music.Parts) {
-                Builder.Instance.Reset();
-                _geography = new List<int>();
-                _challenges = new List<Challenge>();
+                //Builder.Instance.Reset();
                 orderedScale = orderRoles(part);
 
                 // Validação e preparação para a fase
@@ -514,8 +530,8 @@ namespace LevelClasses {
 
 
                 // Outras informações
-                _width = _geography.Count;
-                _height = _geography.Max() + CEILING_HEIGHT;
+                //_width = _geography.Count;
+                //_height = _geography.Max() + CEILING_HEIGHT;
 
                 Console.WriteLine("Mapa {0} gerado", validMaps + 1);
                 SaveImage(rootPath +"Imagens\\" +  ver + "\\" + name + '[' + ( char )('a' + validMaps / 26) + ( char )('a' + validMaps % 26) + ']');
@@ -532,6 +548,9 @@ namespace LevelClasses {
         public List<Scale> orderRoles(Part part) {
             List<Scale> roles = new List<Scale>();
             List<int> roleCount = new List<int>();
+
+            roleCount.Clear();
+            roles.Clear();
 
             roleCount.Add(part.CountRole(Scale.Tonic));
             roleCount.Add(part.CountRole(Scale.Supertonic));
@@ -1077,35 +1096,57 @@ namespace LevelClasses {
             }
         }
 
+        public Bitmap DrawImage() {
+            Bitmap image = new Bitmap((_width + 2 * SCREEN_SIZE) * GRID_SIZE, _height * GRID_SIZE);
+
+            DrawBackground(image);
+            DrawSpecialSection(image, true, STARTING_HEIGHT);
+            for (int section = 0; section < _geography.Count; section++) {
+                DrawSection(image, section, _geography[section]);
+            }
+            DrawSpecialSection(image, false, _endHeight);
+
+            foreach (var challenge in _challenges) {
+                challenge.Draw(image);
+            }
+
+            DrawMeasureBounds(image);
+            DrawScreenBounds(image);
+
+            return image;
+        }
+
         public void SaveImage(string name) {
-            using (Bitmap img = new Bitmap((_width + 2 * SCREEN_SIZE) * GRID_SIZE, _height * GRID_SIZE)) {
-                DrawBackground(img);
-                //Console.WriteLine("   !!! Level.SaveImage() : Número de seções = {0}", _geography.Count);
-                DrawSpecialSection(img, true, STARTING_HEIGHT);
-                for (int section = 0; section < _geography.Count; section++) {
-                    //Console.WriteLine("      !!! Seção {0} : Altura {1}", section, _geography[section]);
-                    DrawSection(img, section, _geography[section]);
-                }
-                DrawSpecialSection(img, false, Builder.Instance.height);
+            //using (Bitmap img = new Bitmap((_width + 2 * SCREEN_SIZE) * GRID_SIZE, _height * GRID_SIZE)) {
+            //    DrawBackground(img);
+            //    //Console.WriteLine("   !!! Level.SaveImage() : Número de seções = {0}", _geography.Count);
+            //    DrawSpecialSection(img, true, STARTING_HEIGHT);
+            //    for (int section = 0; section < _geography.Count; section++) {
+            //        //Console.WriteLine("      !!! Seção {0} : Altura {1}", section, _geography[section]);
+            //        DrawSection(img, section, _geography[section]);
+            //    }
+            //    DrawSpecialSection(img, false, Builder.Instance.height);
 
-                //foreach (var abyss in _abysses) {
-                //    abyss.Draw(img);
-                //}
+            //    //foreach (var abyss in _abysses) {
+            //    //    abyss.Draw(img);
+            //    //}
 
-                foreach (var challenge in _challenges) {
-                    challenge.Draw(img);  
-                }
+            //    foreach (var challenge in _challenges) {
+            //        challenge.Draw(img);  
+            //    }
 
-                DrawMeasureBounds(img);
-                DrawScreenBounds(img);
+            //    DrawMeasureBounds(img);
+            //    DrawScreenBounds(img);
+
+            Bitmap img = DrawImage();
                 try {
                     img.Save(name + ".png", ImageFormat.Png);
                 } catch (Exception er) {
                     Console.WriteLine("Não foi possível construir a imagem ({0})", er.Message);
                 }
-                
+            img.Dispose();
 
-            }
+            //}
         }
 
         internal void DrawScreenBounds(Bitmap img) {

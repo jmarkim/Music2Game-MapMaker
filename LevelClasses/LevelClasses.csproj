@@ -50,6 +50,7 @@
     <Compile Include="FallingBlock.cs" />
     <Compile Include="FloatPlatform.cs" />
     <Compile Include="Level.cs" />
+    <Compile Include="LevelBuilder.cs" />
     <Compile Include="MovingPlatform.cs" />
     <Compile Include="Obstacle.cs" />
     <Compile Include="PassiveEnemy.cs" />
