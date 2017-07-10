@@ -45,12 +45,23 @@ namespace LevelClasses {
             set { _width = value; }
         }
 
+        // ID da "Part" geradora
+        private int _partID;
+        public int PartID {
+            get { return _partID; }
+            set { _partID = value; }
+        }
+
         // Altura da fase em quadros
         private int _height;
         public int Height {
             get { return _height; }
             set { _height = value; }
         }
+
+      public int FinalWidth() {
+         return _width + 2 * SCREEN_SIZE;
+      }
 
         // Define a geografia da fase, definida como altura das plataformas em cada quadro
         private List<int> _geography;
@@ -390,7 +401,7 @@ namespace LevelClasses {
 
                         } else if (role == lowerHeight) {
                             if (Builder.Instance.abyssFlag) {
-                                // Gera plataforma móvel vertical (descendo)
+                                // Gera plataforma móvel vertical (descendo)    
                                 int width = Math.Max(1, MEASURE_SIZE * note.Duration / size);
                                 int offset = MEASURE_SIZE * note.Position / size;
                                 int lmargin = Math.Max(1, Math.Min(4, offset / 2 + note.Note.Tone));

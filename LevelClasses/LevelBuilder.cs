@@ -13,9 +13,11 @@ namespace LevelClasses {
             List<Level> batch = new List<Level>();
             List<Scale> order;
             Level newLevel;
+            int pc = 0;
 
             foreach (Part p in score.Parts) {
                 newLevel = new Level();
+                newLevel.PartID = pc++;
                 order = newLevel.orderRoles(p);
 
                 // Validação de Instrumento
